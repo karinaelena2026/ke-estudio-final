@@ -1,0 +1,43 @@
+{
+  "name": "Karina Elena Estudio Jurídico",
+  "short_name": "KE Estudio",
+  "description": "Sistema de gestión de Karina Elena Estudio Jurídico · Río Cuarto, Córdoba",
+  "start_url": "./ke-app.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0D0D0D",
+  "theme_color": "#0D0D0D",
+  "lang": "es",
+  "categories": ["productivity", "business"],
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Tareas",
+      "short_name": "Tareas",
+      "description": "Ver tareas del equipo",
+      "url": "./ke-app.html#tareas",
+      "icons": [{"src": "icon-192.png", "sizes": "192x192"}]
+    },
+    {
+      "name": "Expedientes",
+      "short_name": "Expedientes",
+      "description": "Ver expedientes",
+      "url": "./ke-app.html#expedientes",
+      "icons": [{"src": "icon-192.png", "sizes": "192x192"}]
+    }
+  ]
+}
