@@ -90,6 +90,12 @@ body.light .hdr-seal{background:radial-gradient(circle,#e8e0d0,#c0b8a8)}
 .divtxt::before,.divtxt::after{content:'';flex:1;height:1px;background:var(--border)}
 
 /* DASHBOARD */
+.clock-wrap{display:flex;align-items:center;gap:14px;margin-bottom:10px}
+.clock-info{display:flex;flex-direction:column;gap:3px}
+.clock-time{font-family:'Playfair Display',serif;font-size:28px;font-weight:600;color:var(--gold);letter-spacing:1px;line-height:1}
+.clock-date{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text3)}
+#analogClock{border-radius:50%;flex-shrink:0}
+
 .greet-time{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text3)}
 .greet-name{font-family:'Playfair Display',serif;font-size:21px;color:var(--text);margin-top:2px;margin-bottom:14px}
 .greet-name b{color:var(--gold);font-weight:600}
@@ -546,7 +552,13 @@ textarea.finput{resize:none;height:70px;line-height:1.5}
 
     <!-- DASHBOARD -->
     <section class="screen active" id="screen-dashboard">
-      <div class="greet-time" id="greetDate"></div>
+      <div class="clock-wrap">
+        <canvas id="analogClock" width="120" height="120"></canvas>
+        <div class="clock-info">
+          <div class="clock-time" id="clockDigital"></div>
+          <div class="clock-date" id="greetDate"></div>
+        </div>
+      </div>
       <div class="greet-name">Buenos días, <b id="greetName"></b></div>
       <div id="dashStats">
         <div class="stats-grid">
@@ -1995,6 +2007,132 @@ function closeTeamDetail() {
 }
 
 // ── RENDER ALL ──
+// ── RELOJ ANALÓGICO ──
+var clockInterval = null;
+
+function drawClock() {
+  var canvas = document.getElementById('analogClock');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var now = new Date();
+  var W = canvas.width, H = canvas.height;
+  var cx = W/2, cy = H/2, r = W/2 - 4;
+  var isDark = !document.body.classList.contains('light');
+  var bgColor   = isDark ? '#111111' : '#f5f0e8';
+  var rimColor  = '#C9A96E';
+  var tickColor = isDark ? '#888' : '#aaa';
+  var goldColor = '#C9A96E';
+  var handColor = isDark ? '#e8e8e8' : '#222';
+  var secColor  = '#C9A96E';
+  var centerCol = '#C9A96E';
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Fondo con degradé sutil
+  var grad = ctx.createRadialGradient(cx, cy-r*0.2, r*0.1, cx, cy, r);
+  grad.addColorStop(0, isDark ? '#1a1a1a' : '#fdfaf5');
+  grad.addColorStop(1, isDark ? '#0a0a0a' : '#ede8dc');
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, 2*Math.PI);
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // Borde dorado
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, 2*Math.PI);
+  ctx.strokeStyle = rimColor;
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+
+  // Segundo borde interior
+  ctx.beginPath();
+  ctx.arc(cx, cy, r - 5, 0, 2*Math.PI);
+  ctx.strokeStyle = isDark ? '#2a2a2a' : '#d4cec0';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Marcas de horas
+  for (var i = 0; i < 12; i++) {
+    var angle = (i * Math.PI / 6) - Math.PI/2;
+    var isMain = (i % 3 === 0);
+    var len = isMain ? 10 : 5;
+    var lw = isMain ? 2 : 1;
+    var x1 = cx + Math.cos(angle) * (r - 8);
+    var y1 = cy + Math.sin(angle) * (r - 8);
+    var x2 = cx + Math.cos(angle) * (r - 8 - len);
+    var y2 = cy + Math.sin(angle) * (r - 8 - len);
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.strokeStyle = isMain ? goldColor : tickColor;
+    ctx.lineWidth = lw;
+    ctx.stroke();
+  }
+
+  var sec  = now.getSeconds();
+  var min  = now.getMinutes();
+  var hr   = now.getHours() % 12;
+
+  var secA = (sec  * Math.PI / 30) - Math.PI/2;
+  var minA = ((min + sec/60) * Math.PI / 30) - Math.PI/2;
+  var hrA  = ((hr  + min/60) * Math.PI / 6) - Math.PI/2;
+
+  // Aguja hora
+  ctx.beginPath();
+  ctx.moveTo(cx - Math.cos(hrA)*6, cy - Math.sin(hrA)*6);
+  ctx.lineTo(cx + Math.cos(hrA)*(r*0.48), cy + Math.sin(hrA)*(r*0.48));
+  ctx.strokeStyle = handColor;
+  ctx.lineWidth = 3.5;
+  ctx.lineCap = 'round';
+  ctx.stroke();
+
+  // Aguja minutos
+  ctx.beginPath();
+  ctx.moveTo(cx - Math.cos(minA)*8, cy - Math.sin(minA)*8);
+  ctx.lineTo(cx + Math.cos(minA)*(r*0.68), cy + Math.sin(minA)*(r*0.68));
+  ctx.strokeStyle = handColor;
+  ctx.lineWidth = 2.5;
+  ctx.lineCap = 'round';
+  ctx.stroke();
+
+  // Aguja segundos
+  ctx.beginPath();
+  ctx.moveTo(cx - Math.cos(secA)*12, cy - Math.sin(secA)*12);
+  ctx.lineTo(cx + Math.cos(secA)*(r*0.78), cy + Math.sin(secA)*(r*0.78));
+  ctx.strokeStyle = secColor;
+  ctx.lineWidth = 1.2;
+  ctx.lineCap = 'round';
+  ctx.stroke();
+
+  // Centro
+  ctx.beginPath();
+  ctx.arc(cx, cy, 4, 0, 2*Math.PI);
+  ctx.fillStyle = centerCol;
+  ctx.fill();
+
+  // Actualizar hora digital y saludo
+  var hh = String(now.getHours()).padStart(2,'0');
+  var mm = String(now.getMinutes()).padStart(2,'0');
+  var digitalEl = document.getElementById('clockDigital');
+  if (digitalEl) digitalEl.textContent = hh + ':' + mm;
+
+  // Saludo por hora
+  var greetEl = document.querySelector('.greet-name');
+  if (greetEl) {
+    var nameEl = document.getElementById('greetName');
+    var nombre = nameEl ? nameEl.textContent : '';
+    var hora = now.getHours();
+    var saludo = hora >= 5 && hora < 12 ? 'Buenos días' : hora >= 12 && hora < 19 ? 'Buenas tardes' : 'Buenas noches';
+    greetEl.innerHTML = saludo + ', <b>' + nombre + '</b>';
+  }
+}
+
+function startClock() {
+  drawClock();
+  if (clockInterval) clearInterval(clockInterval);
+  clockInterval = setInterval(drawClock, 1000);
+}
+
 function renderAll() {
   renderClients();
   renderExpedientes();
@@ -2091,10 +2229,12 @@ function startApp(uid) {
 
   buildContacts();
   renderAll();
+  startClock();
   goNav('dashboard');
 }
 
 function doLogout() {
+  if (clockInterval) { clearInterval(clockInterval); clockInterval = null; }
   currentUser = null;
   pendingUser = null;
   document.getElementById('appShell').style.display = 'none';
