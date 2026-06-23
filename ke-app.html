@@ -1052,7 +1052,7 @@ textarea.finput{resize:none;height:70px;line-height:1.5}
 
 <script>
 var PASS_KARINA = 'Jefa2026';
-var PASS_EMPLEADAS = 'estudio2026';
+var PASS_EMPLEADAS = { yani: 'yani2026k', mili: 'Mili2026k', josefina: 'estudio2026' };
 var currentUser = null;
 var pendingUser = null;
 var selAssignees = [];
@@ -1128,7 +1128,7 @@ function selectUser(uid) {
   var roleEl = document.getElementById('selRole');
   roleEl.textContent = u.role === 'admin' ? 'Directora · Acceso total' : 'Colaboradora';
   roleEl.className = 'urole ' + (u.role === 'admin' ? 'role-a' : 'role-e');
-  document.getElementById('pwHint').textContent = uid === 'karina' ? 'Contraseña personal de la directora' : 'Contraseña compartida del equipo';
+  document.getElementById('pwHint').textContent = uid === 'karina' ? 'Contraseña personal de la directora' : 'Contraseña personal de ' + USERS[uid].name;
   document.getElementById('pwInput').value = '';
   document.getElementById('pwErr').style.display = 'none';
   document.getElementById('pwField').style.borderColor = 'var(--border)';
@@ -1148,7 +1148,7 @@ function togglePw() {
 
 function doLogin() {
   var pw = document.getElementById('pwInput').value;
-  var correctPass = pendingUser === 'karina' ? PASS_KARINA : PASS_EMPLEADAS;
+  var correctPass = pendingUser === 'karina' ? PASS_KARINA : PASS_EMPLEADAS[pendingUser];
   if (pw !== correctPass) {
     document.getElementById('pwErr').style.display = 'block';
     document.getElementById('pwField').style.borderColor = '#E74C3C';
