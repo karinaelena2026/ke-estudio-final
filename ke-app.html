@@ -1181,6 +1181,7 @@ function saveLocalDB() {
 var DB = loadLocalDB();
 if (!DB.eventos) DB.eventos = [];
 if (!DB.pizarra) DB.pizarra = {texto:'', fecha:''};
+if (!DB.sesiones) DB.sesiones = {};
 
 function uid() { return 'id_' + Date.now() + '_' + Math.floor(Math.random() * 9999); }
 
@@ -1242,6 +1243,8 @@ function initCloudSync() {
           DB.novedades = cloudData.novedades || [];
           DB.eventos = cloudData.eventos || [];
           DB.docs = cloudData.docs || [];
+          DB.pizarra = cloudData.pizarra || {texto:'', fecha:''};
+          DB.sesiones = cloudData.sesiones || {};
           saveLocalDB();
           if (currentUser) renderAll();
           fbSyncing = false;
@@ -2001,8 +2004,22 @@ function renderEquipo() {
     var done = 0;
     for (var k = 0; k < userTasks.length; k++) { if (userTasks[k].completada) done++; }
     var pend = userTasks.length - done;
+
+    // Sesión
+    var sesion = DB.sesiones ? DB.sesiones[uid_] : null;
+    var isOnline = sesion && sesion.online;
+    var ultimaCon = sesion && sesion.ultimaConexion ? new Date(sesion.ultimaConexion) : null;
+    var ultimaConStr = ultimaCon ? ultimaCon.toLocaleDateString('es-AR') + ' · ' + ultimaCon.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}) : 'Nunca';
+    var dispositivo = sesion && sesion.dispositivo ? sesion.dispositivo : '—';
+    var onlineDot = isOnline ? '<span style="width:8px;height:8px;border-radius:50%;background:#27AE60;display:inline-block;margin-right:4px"></span>' : '<span style="width:8px;height:8px;border-radius:50%;background:var(--text3);display:inline-block;margin-right:4px"></span>';
+    var onlineLabel = isOnline ? '<span style="color:#27AE60;font-size:9px;font-weight:600">EN LÍNEA</span>' : '<span style="color:var(--text3);font-size:9px">Últ. vez: ' + ultimaConStr + '</span>';
+
     html += '<div class="team-card" onclick="openTeamDetail(\'' + uid_ + '\')" style="cursor:pointer">';
-    html += '<div class="team-top"><div class="team-av" style="background:' + u.bg + ';color:#0D0D0D">' + u.ini + '</div><div><div class="team-name">' + u.name + '</div><div class="team-role">Colaboradora</div></div><span style="margin-left:auto;color:var(--text3);font-size:16px">›</span></div>';
+    html += '<div class="team-top"><div class="team-av" style="background:' + u.bg + ';color:#0D0D0D">' + u.ini + '</div>';
+    html += '<div style="flex:1"><div class="team-name">' + u.name + '</div>';
+    html += '<div style="display:flex;align-items:center;gap:4px;margin-top:3px">' + onlineDot + onlineLabel + '</div>';
+    if (sesion) html += '<div style="font-size:9px;color:var(--text3);margin-top:2px">' + dispositivo + '</div>';
+    html += '</div><span style="color:var(--text3);font-size:16px">›</span></div>';
     html += '<div class="team-stats"><div class="ts"><div class="ts-val">' + userTasks.length + '</div><div class="ts-lbl">Asignadas</div></div><div class="ts"><div class="ts-val cwarn">' + pend + '</div><div class="ts-lbl">Pendientes</div></div><div class="ts"><div class="ts-val cup">' + done + '</div><div class="ts-lbl">Completadas</div></div></div></div>';
   }
   el.innerHTML = html;
@@ -2333,8 +2350,39 @@ function confirmDelete() {
   showToast('🗑️ Eliminado correctamente');
 }
 
+function getDeviceName() {
+  var ua = navigator.userAgent;
+  if (/iPhone/.test(ua)) return '📱 iPhone';
+  if (/iPad/.test(ua)) return '📱 iPad';
+  if (/Android/.test(ua) && /Mobile/.test(ua)) return '📱 Android';
+  if (/Android/.test(ua)) return '📱 Tablet Android';
+  if (/Windows/.test(ua)) return '💻 Windows';
+  if (/Mac/.test(ua)) return '💻 Mac';
+  return '🖥️ Dispositivo';
+}
+
+function trackSession(uid) {
+  try {
+    if (!DB.sesiones) DB.sesiones = {};
+    DB.sesiones[uid] = {
+      ultimaConexion: new Date().toISOString(),
+      dispositivo: getDeviceName(),
+      online: true
+    };
+    saveDB();
+    // Marcar offline al cerrar
+    window.addEventListener('beforeunload', function() {
+      if (DB.sesiones && DB.sesiones[uid]) {
+        DB.sesiones[uid].online = false;
+        saveDB();
+      }
+    });
+  } catch(e) {}
+}
+
 function startApp(uid) {
   currentUser = uid;
+  trackSession(uid);
   var u = USERS[uid];
   document.getElementById('loginScreen').style.display = 'none';
   var shell = document.getElementById('appShell');
