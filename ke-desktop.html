@@ -2891,15 +2891,7 @@ function sendMsg() {
   renderMsgs(contact.msgs);
   var msgs = document.getElementById('messages');
   setTimeout(function() { msgs.scrollTop = msgs.scrollHeight; }, 30);
-  var replies = ['Entendido!','Perfecto, gracias.','Ya lo resuelvo.','Ok, te aviso.','Recibido ✓'];
-  var rep = replies[Math.floor(Math.random() * replies.length)];
-  setTimeout(function() {
-    var rt = ('0'+new Date().getHours()).slice(-2) + ':' + ('0'+new Date().getMinutes()).slice(-2);
-    contact.msgs.push({from: activeChatUid, text: rep, time: rt});
-    renderMsgs(contact.msgs);
-    setTimeout(function() { msgs.scrollTop = msgs.scrollHeight; }, 30);
-    showToast('💬 ' + contact.name + ': ' + rep);
-  }, 1500);
+  // Sin auto-respuesta: el chat solo registra mensajes enviados por el usuario.
 }
 
 function closeChatWin() { document.getElementById('chatWindow').classList.remove('show'); activeChatUid = null; }
