@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ke-abogados-v1';
+const CACHE_NAME = 'ke-abogados-v2';
 const ASSETS = [
   './ke-app.html',
   './manifest.json',
