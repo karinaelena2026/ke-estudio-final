@@ -479,7 +479,7 @@ textarea.finput{resize:none;height:70px;line-height:1.5}
 <!-- Firebase SDK -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, addDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyCp4E-g24F826werItiw_IzKql6RkYPqho",
@@ -494,7 +494,7 @@ textarea.finput{resize:none;height:70px;line-height:1.5}
   const db = getFirestore(fbApp);
 
   // Expose to the global (non-module) scope used by the rest of the app
-  window.__firebase = { db, collection, doc, setDoc, deleteDoc, onSnapshot };
+  window.__firebase = { db, collection, doc, setDoc, deleteDoc, onSnapshot, addDoc, query, orderBy };
   window.dispatchEvent(new Event('firebase-ready'));
 </script>
 </head>
@@ -2791,6 +2791,13 @@ function buildContacts() {
   list.innerHTML = html;
 }
 
+// ── CHAT EN TIEMPO REAL CON FIRESTORE ──────────────────────────────
+var activeChatListener = null;
+
+function chatRoomId(uid1, uid2) {
+  return [uid1, uid2].sort().join('__');
+}
+
 function openChat(uid) {
   var contacts = CHATS[currentUser] || [];
   var contact = null;
@@ -2802,44 +2809,95 @@ function openChat(uid) {
   document.getElementById('cwName').textContent = contact.name;
   var av = document.getElementById('cwAv');
   av.style.background = contact.bg; av.style.color = '#0D0D0D'; av.textContent = contact.ini;
-  renderMsgs(contact.msgs);
+  document.getElementById('messages').innerHTML = '<div style="text-align:center;color:var(--text3);font-size:11px;padding:20px">Cargando mensajes...</div>';
   document.getElementById('chatWindow').classList.add('show');
-  setTimeout(function() { var m = document.getElementById('messages'); if(m) m.scrollTop = m.scrollHeight; }, 50);
+
+  if (activeChatListener) { activeChatListener(); activeChatListener = null; }
+
+  if (!window.__firebase) {
+    renderMsgs(contact.msgs);
+    return;
+  }
+
+  var fb = window.__firebase;
+  var roomId = chatRoomId(currentUser, uid);
+
+  // Usamos onSnapshot con subcolección mensajes dentro de chats/roomId
+  var msgsRef = fb.collection(fb.db, 'chats', roomId, 'mensajes');
+
+  activeChatListener = fb.onSnapshot(msgsRef, function(snap) {
+    var msgs = [];
+    snap.forEach(function(d) { msgs.push(d.data()); });
+    // Ordenar por timestamp
+    msgs.sort(function(a,b){ return (a.ts||0)-(b.ts||0); });
+    contact.msgs = msgs;
+    if (msgs.length > 0) {
+      var last = msgs[msgs.length-1];
+      contact.prev = last.text;
+      contact.time = last.time;
+    }
+    renderMsgs(msgs);
+    buildContacts();
+  }, function() {
+    renderMsgs(contact.msgs);
+  });
 }
 
 function renderMsgs(msgs) {
   var me = currentUser;
   var html = '';
-  for (var i = 0; i < msgs.length; i++) {
-    var m = msgs[i];
-    var mine = m.from === me;
-    html += '<div class="msg ' + (mine ? 'mine' : 'theirs') + '">';
-    html += '<div class="bubble">' + m.text + '</div>';
-    html += '<div class="msg-time">' + m.time + (mine ? ' ✓✓' : '') + '</div></div>';
+  if (!msgs || msgs.length === 0) {
+    html = '<div style="text-align:center;color:var(--text3);font-size:11px;padding:30px">No hay mensajes aún.<br>¡Escribí el primero!</div>';
+  } else {
+    for (var i = 0; i < msgs.length; i++) {
+      var m = msgs[i];
+      var mine = m.from === me;
+      html += '<div class="msg ' + (mine ? 'mine' : 'theirs') + '">';
+      html += '<div class="bubble">' + m.text + '</div>';
+      html += '<div class="msg-time">' + m.time + (mine ? ' ✓✓' : '') + '</div></div>';
+    }
   }
-  document.getElementById('messages').innerHTML = html;
+  var el = document.getElementById('messages');
+  el.innerHTML = html;
+  setTimeout(function(){ el.scrollTop = el.scrollHeight; }, 50);
 }
 
 function sendMsg() {
   var inp = document.getElementById('chatInp');
   var text = inp.value.trim();
   if (!text || !activeChatUid) return;
-  var contacts = CHATS[currentUser] || [];
-  var contact = null;
-  for (var i = 0; i < contacts.length; i++) { if (contacts[i].uid === activeChatUid) { contact = contacts[i]; break; } }
-  if (!contact) return;
+  inp.value = '';
+
   var now = new Date();
   var time = ('0'+now.getHours()).slice(-2) + ':' + ('0'+now.getMinutes()).slice(-2);
-  contact.msgs.push({from: currentUser, text: text, time: time});
-  contact.prev = text;
-  contact.time = time;
-  inp.value = '';
-  renderMsgs(contact.msgs);
-  var msgs = document.getElementById('messages');
-  setTimeout(function() { msgs.scrollTop = msgs.scrollHeight; }, 30);
+  var msg = { from: currentUser, text: text, time: time, ts: now.getTime() };
+
+  if (!window.__firebase) {
+    var contacts = CHATS[currentUser] || [];
+    for (var i = 0; i < contacts.length; i++) {
+      if (contacts[i].uid === activeChatUid) {
+        contacts[i].msgs.push(msg);
+        contacts[i].prev = text; contacts[i].time = time;
+        renderMsgs(contacts[i].msgs); buildContacts(); break;
+      }
+    }
+    return;
+  }
+
+  var fb = window.__firebase;
+  var roomId = chatRoomId(currentUser, activeChatUid);
+  var msgsRef = fb.collection(fb.db, 'chats', roomId, 'mensajes');
+  fb.addDoc(msgsRef, msg).catch(function() {
+    showToast('⚠ Error al enviar mensaje');
+    inp.value = text;
+  });
 }
 
-function closeChatWin() { document.getElementById('chatWindow').classList.remove('show'); activeChatUid = null; }
+function closeChatWin() {
+  document.getElementById('chatWindow').classList.remove('show');
+  activeChatUid = null;
+  if (activeChatListener) { activeChatListener(); activeChatListener = null; }
+}
 
 function openNotif() { document.getElementById('notifPanel').classList.add('show'); }
 function closeNotif() { document.getElementById('notifPanel').classList.remove('show'); }
