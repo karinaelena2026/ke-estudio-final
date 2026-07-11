@@ -24,11 +24,13 @@
   --border:#2A2A2A;--gold:#C9A96E;--gold2:#A8843A;
   --text:#E8E0D0;--text2:#9A9080;--text3:#6A6058;
   --danger:#C0392B;--success:#27AE60;--warning:#E67E22;
+  --rent:#4FA3A0;--rent2:#3D827F;
 }
 body.light{
   --bg:#F0EBE0;--bg2:#E8E3D8;--card:#FFF;--card2:#F8F5EF;
   --border:#D8D0C0;--gold:#8B6914;--gold2:#6B4F10;
   --text:#1A1510;--text2:#5A5040;--text3:#9A9080;
+  --rent:#1D7D79;--rent2:#155F5C;
 }
 body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:background .3s,color .3s}
 .app{max-width:430px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;position:relative}
@@ -472,6 +474,46 @@ textarea.finput{resize:none;height:70px;line-height:1.5}
 .empty-state-sm{text-align:center;padding:16px;font-size:11px;color:var(--text3);display:none}
 .empty-state-sm.show{display:block}
 
+/* ═══ ALQUILERES / GASTOS ═══ */
+#screen-alquileres .fpill.on,#screen-gastos .fpill.on{background:var(--rent);border-color:var(--rent);color:#fff}
+#screen-alquileres .add-row-btn,#screen-gastos .add-row-btn{border-color:var(--rent);color:var(--rent)}
+#screen-alquileres .add-row-btn:hover,#screen-gastos .add-row-btn:hover{background:rgba(79,163,160,.1)}
+.prop-card{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:13px;margin-bottom:8px;cursor:pointer;transition:all .2s}
+.prop-card:hover{border-color:var(--rent);transform:translateX(2px)}
+.prop-hdr{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.prop-dir{font-family:'Playfair Display',serif;font-size:14px;font-weight:600;color:var(--text)}
+.prop-owner{font-size:10px;color:var(--text3);margin-top:2px}
+.prop-rent{font-size:13px;font-weight:700;color:var(--rent);white-space:nowrap}
+.prop-meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:9px;font-size:10px;color:var(--text2)}
+.prop-meta b{color:var(--text)}
+.rent-alert{display:inline-flex;align-items:center;gap:4px;font-size:9px;color:#E74C3C;font-weight:600;margin-top:6px}
+.owner-row{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:12px;display:flex;align-items:center;gap:10px;margin-bottom:7px}
+.owner-av{width:38px;height:38px;border-radius:50%;background:var(--rent);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-weight:700;font-size:13px;flex-shrink:0}
+.owner-info{flex:1;min-width:0}
+.owner-name{font-size:13px;font-weight:600;color:var(--text)}
+.owner-sub{font-size:10px;color:var(--text3);margin-top:2px}
+.concept-row{background:var(--card2);border:1px solid var(--border);border-radius:9px;padding:10px;margin-bottom:7px}
+.concept-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
+.concept-lbl{font-size:11px;font-weight:600;color:var(--text)}
+.concept-state{display:flex;gap:4px}
+.cstate-opt{font-size:9px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);cursor:pointer;color:var(--text3)}
+.cstate-opt.on-pagado{background:var(--success);border-color:var(--success);color:#fff}
+.cstate-opt.on-parcial{background:var(--warning);border-color:var(--warning);color:#fff}
+.cstate-opt.on-pendiente{background:var(--danger);border-color:var(--danger);color:#fff}
+.concept-inputs{display:flex;gap:6px}
+.concept-inputs .finput{margin:0;font-size:12px;padding:8px 10px}
+.section-tag{font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--rent);font-weight:700;margin:14px 0 7px}
+.tenant-box{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px}
+.tenant-box .tname{font-size:13px;font-weight:600;color:var(--text)}
+.tenant-box .tmeta{font-size:10px;color:var(--text3);margin-top:3px;line-height:1.5}
+.rentval-item{display:flex;justify-content:space-between;font-size:11px;padding:7px 0;border-bottom:1px solid var(--border)}
+.rentval-item:last-child{border-bottom:none}
+.liq-card{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:14px;margin-bottom:9px}
+.liq-total{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:var(--rent);margin:6px 0}
+.liq-badge{font-size:9px;padding:3px 8px;border-radius:20px;background:var(--success);color:#fff;display:inline-block}
+.liq-badge.pend{background:var(--warning)}
+.print-btn{font-size:11px;padding:8px 12px;border-radius:8px;border:1px solid var(--rent);color:var(--rent);background:transparent;cursor:pointer;font-weight:600}
+
 ::-webkit-scrollbar{width:5px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
@@ -727,6 +769,98 @@ textarea.finput{resize:none;height:70px;line-height:1.5}
       </div>
     </section>
 
+    <!-- ALQUILERES -->
+    <section class="screen" id="screen-alquileres">
+      <div class="eyebrow">Administración</div><div class="stitle">Alquileres</div>
+      <div class="filter-bar">
+        <div class="fpill on" onclick="alqTab('propietarios',this)">👤 Propietarios</div>
+        <div class="fpill" onclick="alqTab('propiedades',this)">🏠 Propiedades</div>
+        <div class="fpill" onclick="alqTab('pagos',this)">💵 Pagos del mes</div>
+        <div class="fpill" onclick="alqTab('liquidaciones',this)">🧾 Liquidaciones</div>
+      </div>
+
+      <div class="alq-sub" id="alqSub-propietarios">
+        <button class="add-row-btn" onclick="openPropietarioModal()">➕ Agregar propietario</button>
+        <div id="propietarioList"></div>
+        <div id="propietarioEmpty" class="empty-state">
+          <div class="empty-icon">👤</div>
+          <div class="empty-title">Todavía no hay propietarios</div>
+          <div class="empty-sub">Tocá "Agregar propietario" para cargar el primero</div>
+        </div>
+      </div>
+
+      <div class="alq-sub" id="alqSub-propiedades" style="display:none">
+        <button class="add-row-btn" onclick="openPropiedadModal()">➕ Agregar propiedad</button>
+        <div id="propiedadList"></div>
+        <div id="propiedadEmpty" class="empty-state">
+          <div class="empty-icon">🏠</div>
+          <div class="empty-title">Todavía no hay propiedades</div>
+          <div class="empty-sub">Cargá primero un propietario, y después sus propiedades</div>
+        </div>
+      </div>
+
+      <div class="alq-sub" id="alqSub-pagos" style="display:none">
+        <div class="cal-hdr"><div class="cal-month" id="pagosMesLbl">—</div><div style="display:flex;gap:5px"><button class="cal-nav-btn" onclick="pagosMesNav(-1)">‹</button><button class="cal-nav-btn" onclick="pagosMesNav(1)">›</button></div></div>
+        <div id="pagosList"></div>
+        <div id="pagosEmpty" class="empty-state">
+          <div class="empty-icon">💵</div>
+          <div class="empty-title">No hay propiedades cargadas</div>
+          <div class="empty-sub">Agregá propiedades para empezar a cargar pagos</div>
+        </div>
+      </div>
+
+      <div class="alq-sub" id="alqSub-liquidaciones" style="display:none">
+        <div class="cal-hdr"><div class="cal-month" id="liqMesLbl">—</div><div style="display:flex;gap:5px"><button class="cal-nav-btn" onclick="liqMesNav(-1)">‹</button><button class="cal-nav-btn" onclick="liqMesNav(1)">›</button></div></div>
+        <div id="liqList"></div>
+        <div id="liqEmpty" class="empty-state">
+          <div class="empty-icon">🧾</div>
+          <div class="empty-title">No hay propietarios cargados</div>
+          <div class="empty-sub">Agregá propietarios y propiedades para generar liquidaciones</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- GASTOS -->
+    <section class="screen" id="screen-gastos">
+      <div class="eyebrow">Administración</div><div class="stitle">Gastos</div>
+      <div class="filter-bar">
+        <div class="fpill on" onclick="gastosTab('oficina',this)">🏢 Oficina</div>
+        <div class="fpill" onclick="gastosTab('clientes',this)">⚖️ De clientes</div>
+      </div>
+
+      <div class="gasto-sub" id="gastoSub-oficina">
+        <div class="filter-bar">
+          <div class="fpill on" onclick="setGastosOficinaMode('mes',this)">Por mes</div>
+          <div class="fpill" onclick="setGastosOficinaMode('semana',this)">Por semana</div>
+        </div>
+        <div class="cal-hdr"><div class="cal-month" id="gastosOfLbl">—</div><div style="display:flex;gap:5px"><button class="cal-nav-btn" onclick="gastosOficinaNav(-1)">‹</button><button class="cal-nav-btn" onclick="gastosOficinaNav(1)">›</button></div></div>
+        <div class="liq-card" style="margin-bottom:12px"><div class="owner-sub">Total del período</div><div class="liq-total" id="gastosOfTotal">$0</div></div>
+        <button class="add-row-btn" onclick="openGastoOficinaModal()">➕ Agregar gasto de oficina</button>
+        <div id="gastoOficinaList"></div>
+        <div id="gastoOficinaEmpty" class="empty-state">
+          <div class="empty-icon">🏢</div>
+          <div class="empty-title">Sin gastos cargados en este período</div>
+          <div class="empty-sub">Tocá "Agregar gasto de oficina" para cargar el primero</div>
+        </div>
+      </div>
+
+      <div class="gasto-sub" id="gastoSub-clientes" style="display:none">
+        <div class="filter-bar">
+          <div class="fpill on" onclick="filterGastosCliente('todos',this)">Todos</div>
+          <div class="fpill" onclick="filterGastosCliente('pendiente',this)">🟡 Pendientes</div>
+          <div class="fpill" onclick="filterGastosCliente('reintegrado',this)">✅ Reintegrados</div>
+        </div>
+        <div class="liq-card" style="margin-bottom:12px"><div class="owner-sub">Total pendiente de reintegro</div><div class="liq-total" id="gastosClPendiente">$0</div></div>
+        <button class="add-row-btn" onclick="openGastoClienteModal()">➕ Agregar gasto de cliente</button>
+        <div id="gastoClienteList"></div>
+        <div id="gastoClienteEmpty" class="empty-state">
+          <div class="empty-icon">⚖️</div>
+          <div class="empty-title">Sin gastos de clientes cargados</div>
+          <div class="empty-sub">Tocá "Agregar gasto de cliente" para cargar el primero</div>
+        </div>
+      </div>
+    </section>
+
     <!-- TAREAS -->
     <section class="screen" id="screen-tareas">
       <div class="eyebrow">Organización</div>
@@ -964,6 +1098,151 @@ textarea.finput{resize:none;height:70px;line-height:1.5}
     </div>
   </div>
 
+  <!-- NUEVO PROPIETARIO MODAL -->
+  <div class="overlay" id="propietarioModal">
+    <div class="modal">
+      <div class="mhandle"></div>
+      <div class="mtitle" id="propietarioModalTitle">Nuevo propietario</div>
+      <span class="flabel">Nombre y apellido *</span>
+      <input class="finput" id="pf-nombre" placeholder="Ej: Roberto Sánchez">
+      <span class="flabel">Teléfono (WhatsApp)</span>
+      <input class="finput" id="pf-tel" placeholder="Ej: 358-4123456" type="tel">
+      <span class="flabel">Comisión de Karina</span>
+      <select class="finput" id="pf-comisionTipo" onchange="togglePfComision()">
+        <option value="ninguna">Ninguna (liquida el 100%)</option>
+        <option value="porcentaje">Porcentaje sobre lo cobrado</option>
+        <option value="fijo">Monto fijo por propiedad</option>
+      </select>
+      <div id="pf-comisionValorWrap" style="display:none">
+        <span class="flabel" id="pf-comisionValorLbl">Valor</span>
+        <input class="finput" id="pf-comisionValor" type="number" placeholder="Ej: 10">
+      </div>
+      <span class="flabel">Notas</span>
+      <textarea class="finput" id="pf-notas" placeholder="Información adicional..."></textarea>
+      <button class="msubmit" onclick="submitPropietario()">✅ Guardar propietario</button>
+      <button class="mcancel" onclick="closeModal('propietarioModal')">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- NUEVA PROPIEDAD MODAL -->
+  <div class="overlay" id="propiedadModal">
+    <div class="modal">
+      <div class="mhandle"></div>
+      <div class="mtitle" id="propiedadModalTitle">Nueva propiedad</div>
+      <span class="flabel">Propietario *</span>
+      <select class="finput" id="pdf-propietario"></select>
+      <span class="flabel">Dirección / Alias *</span>
+      <input class="finput" id="pdf-direccion" placeholder="Ej: Bv. Sarmiento 450, depto 2">
+      <span class="flabel">Conceptos que paga el inquilino (además del alquiler)</span>
+      <div class="arow" id="pdf-conceptos">
+        <div class="aopt" data-c="expensas" onclick="selConcepto(this)">Expensas</div>
+        <div class="aopt" data-c="emos" onclick="selConcepto(this)">EMOS</div>
+        <div class="aopt" data-c="municipales" onclick="selConcepto(this)">Municipales</div>
+        <div class="aopt" data-c="rentas" onclick="selConcepto(this)">Rentas</div>
+      </div>
+      <button class="msubmit" onclick="submitPropiedad()">✅ Guardar propiedad</button>
+      <button class="mcancel" onclick="closeModal('propiedadModal')">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- DETALLE DE PROPIEDAD -->
+  <div class="overlay" id="propDetailModal">
+    <div class="modal" style="max-height:85vh;display:flex;flex-direction:column">
+      <div class="mhandle"></div>
+      <div class="mtitle" id="propDetailTitle" style="margin-bottom:2px">Propiedad</div>
+      <div style="overflow-y:auto;flex:1" id="propDetailBody"></div>
+      <div class="item-actions" style="margin-top:10px">
+        <div class="act-btn" onclick="editPropiedadFromDetail()">✏️ Editar propiedad</div>
+        <div class="act-btn danger" onclick="deletePropiedadFromDetail()">🗑️ Borrar propiedad</div>
+      </div>
+      <button class="mcancel" onclick="closeModal('propDetailModal')" style="margin-top:8px">Cerrar</button>
+    </div>
+  </div>
+
+  <!-- NUEVO VALOR DE ALQUILER -->
+  <div class="overlay" id="valorAlquilerModal">
+    <div class="modal">
+      <div class="mhandle"></div>
+      <div class="mtitle">Actualizar valor de alquiler</div>
+      <span class="flabel">Monto nuevo *</span>
+      <input class="finput" id="vf-monto" type="number" placeholder="Ej: 350000">
+      <span class="flabel">Vigente desde *</span>
+      <input class="finput" id="vf-fecha" type="date">
+      <span class="flabel">Motivo</span>
+      <select class="finput" id="vf-motivo">
+        <option value="Actualización ICL">Actualización ICL</option>
+        <option value="Renovación de contrato">Renovación de contrato</option>
+        <option value="Otro">Otro</option>
+      </select>
+      <button class="msubmit" onclick="submitValorAlquiler()">✅ Guardar nuevo valor</button>
+      <button class="mcancel" onclick="closeModal('valorAlquilerModal')">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- NUEVO / CAMBIO DE INQUILINO -->
+  <div class="overlay" id="inquilinoModal">
+    <div class="modal" style="max-height:85vh;overflow-y:auto">
+      <div class="mhandle"></div>
+      <div class="mtitle" id="inquilinoModalTitle">Nuevo inquilino</div>
+      <span class="flabel">Nombre y apellido *</span>
+      <input class="finput" id="if-nombre" placeholder="Ej: Lucas Ferreyra">
+      <span class="flabel">Teléfono</span>
+      <input class="finput" id="if-tel" placeholder="Ej: 358-4123456" type="tel">
+      <span class="flabel">Fecha de inicio del contrato *</span>
+      <input class="finput" id="if-fechaInicio" type="date">
+      <div class="section-tag">Datos del garante</div>
+      <span class="flabel">Nombre y apellido</span>
+      <input class="finput" id="if-gNombre" placeholder="Ej: María Ferreyra">
+      <span class="flabel">DNI</span>
+      <input class="finput" id="if-gDni" placeholder="Ej: 28.456.789">
+      <span class="flabel">Teléfono</span>
+      <input class="finput" id="if-gTel" placeholder="Ej: 358-4987654" type="tel">
+      <span class="flabel">Dirección</span>
+      <input class="finput" id="if-gDireccion" placeholder="Ej: Alvear 320, Río Cuarto">
+      <button class="msubmit" onclick="submitInquilino()">✅ Guardar inquilino</button>
+      <button class="mcancel" onclick="closeModal('inquilinoModal')">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- NUEVO GASTO DE OFICINA -->
+  <div class="overlay" id="gastoOficinaModal">
+    <div class="modal">
+      <div class="mhandle"></div>
+      <div class="mtitle" id="gastoOficinaModalTitle">Nuevo gasto de oficina</div>
+      <span class="flabel">Fecha *</span>
+      <input class="finput" id="gof-fecha" type="date">
+      <span class="flabel">Concepto *</span>
+      <input class="finput" id="gof-concepto" placeholder="Ej: Galletitas y azúcar">
+      <span class="flabel">Monto *</span>
+      <input class="finput" id="gof-monto" type="number" placeholder="Ej: 5000">
+      <button class="msubmit" onclick="submitGastoOficina()">✅ Guardar gasto</button>
+      <button class="mcancel" onclick="closeModal('gastoOficinaModal')">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- NUEVO GASTO DE CLIENTE -->
+  <div class="overlay" id="gastoClienteModal">
+    <div class="modal">
+      <div class="mhandle"></div>
+      <div class="mtitle" id="gastoClienteModalTitle">Nuevo gasto de cliente</div>
+      <span class="flabel">Fecha *</span>
+      <input class="finput" id="gcl-fecha" type="date">
+      <span class="flabel">Cliente *</span>
+      <select class="finput" id="gcl-cliente"></select>
+      <span class="flabel">Concepto *</span>
+      <input class="finput" id="gcl-concepto" placeholder="Ej: Tasa de justicia, carta documento...">
+      <span class="flabel">Monto *</span>
+      <input class="finput" id="gcl-monto" type="number" placeholder="Ej: 15000">
+      <span class="flabel">Estado</span>
+      <select class="finput" id="gcl-estado">
+        <option value="pendiente">Pendiente de reintegro</option>
+        <option value="reintegrado">Reintegrado</option>
+      </select>
+      <button class="msubmit" onclick="submitGastoCliente()">✅ Guardar gasto</button>
+      <button class="mcancel" onclick="closeModal('gastoClienteModal')">Cancelar</button>
+    </div>
+  </div>
+
   <!-- NUEVA NOVEDAD MODAL -->
   <div class="overlay" id="novModal">
     <div class="modal">
@@ -1122,6 +1401,8 @@ var NAV_ADMIN = [
   {id:'expedientes',icon:'📁',lbl:'Exptes.'},
   {id:'calendario',icon:'📅',lbl:'Agenda'},
   {id:'honorarios',icon:'💰',lbl:'Honor.'},
+  {id:'alquileres',icon:'🔑',lbl:'Alquileres'},
+  {id:'gastos',icon:'💸',lbl:'Gastos'},
   {id:'tareas',icon:'✅',lbl:'Tareas'},
   {id:'documentos',icon:'📂',lbl:'Docs'},
   {id:'chat',icon:'💬',lbl:'Chat'},
@@ -1136,6 +1417,8 @@ var NAV_EMP = [
   {id:'clientes',icon:'👤',lbl:'Clientes'},
   {id:'expedientes',icon:'📁',lbl:'Exptes.'},
   {id:'calendario',icon:'📅',lbl:'Agenda'},
+  {id:'alquileres',icon:'🔑',lbl:'Alquileres'},
+  {id:'gastos',icon:'💸',lbl:'Gastos'},
   {id:'tareas',icon:'✅',lbl:'Tareas'},
   {id:'documentos',icon:'📂',lbl:'Docs'},
   {id:'chat',icon:'💬',lbl:'Chat'}
@@ -1232,6 +1515,14 @@ var DB = loadLocalDB();
 if (!DB.eventos) DB.eventos = [];
 if (!DB.pizarra) DB.pizarra = {texto:'', fecha:''};
 if (!DB.sesiones) DB.sesiones = {};
+if (!DB.alqPropietarios) DB.alqPropietarios = [];
+if (!DB.alqPropiedades) DB.alqPropiedades = [];
+if (!DB.alqValoresAlquiler) DB.alqValoresAlquiler = [];
+if (!DB.alqInquilinos) DB.alqInquilinos = [];
+if (!DB.alqPagos) DB.alqPagos = [];
+if (!DB.alqLiquidaciones) DB.alqLiquidaciones = [];
+if (!DB.gastosOficina) DB.gastosOficina = [];
+if (!DB.gastosClientes) DB.gastosClientes = [];
 
 function uid() { return 'id_' + Date.now() + '_' + Math.floor(Math.random() * 9999); }
 
@@ -1295,6 +1586,14 @@ function initCloudSync() {
           DB.docs = cloudData.docs || [];
           DB.pizarra = cloudData.pizarra || {texto:'', fecha:''};
           DB.sesiones = cloudData.sesiones || {};
+          DB.alqPropietarios = cloudData.alqPropietarios || [];
+          DB.alqPropiedades = cloudData.alqPropiedades || [];
+          DB.alqValoresAlquiler = cloudData.alqValoresAlquiler || [];
+          DB.alqInquilinos = cloudData.alqInquilinos || [];
+          DB.alqPagos = cloudData.alqPagos || [];
+          DB.alqLiquidaciones = cloudData.alqLiquidaciones || [];
+          DB.gastosOficina = cloudData.gastosOficina || [];
+          DB.gastosClientes = cloudData.gastosClientes || [];
           saveLocalDB();
           if (currentUser) renderAll();
           fbSyncing = false;
@@ -1599,6 +1898,760 @@ function submitHon() {
   renderHonorarios();
   renderDashboard();
   renderInformes();
+}
+
+// ══════════════════════════ ALQUILERES ══════════════════════════
+function fmtDate(d) {
+  if (!d) return '—';
+  return new Date(d + 'T12:00:00').toLocaleDateString('es-AR');
+}
+function mesLabel(mesStr) {
+  var months = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  var parts = mesStr.split('-');
+  return months[Number(parts[1]) - 1] + ' ' + parts[0];
+}
+function addMonths(mesStr, dir) {
+  var d = new Date(mesStr + '-15T12:00:00');
+  d.setMonth(d.getMonth() + dir);
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+}
+function getInquilinoActual(propiedadId) {
+  var list = DB.alqInquilinos.filter(function(x) { return x.propiedadId === propiedadId && !x.fechaFin; });
+  if (!list.length) return null;
+  list.sort(function(a, b) { return new Date(b.fechaInicio) - new Date(a.fechaInicio); });
+  return list[0];
+}
+function getValorAlquilerVigente(propiedadId) {
+  var list = DB.alqValoresAlquiler.filter(function(x) { return x.propiedadId === propiedadId; });
+  if (!list.length) return null;
+  list.sort(function(a, b) { return new Date(b.fechaDesde) - new Date(a.fechaDesde); });
+  return list[0];
+}
+function monthsBetween(d1, d2) {
+  return (d2.getFullYear() - d1.getFullYear()) * 12 + (d2.getMonth() - d1.getMonth()) + (d2.getDate() >= d1.getDate() ? 0 : -1);
+}
+function rentUpdateOverdue(propiedadId) {
+  var v = getValorAlquilerVigente(propiedadId);
+  if (!v) return false;
+  return monthsBetween(new Date(v.fechaDesde + 'T12:00:00'), new Date()) >= 4;
+}
+
+function alqTab(id, el) {
+  var subs = document.querySelectorAll('#screen-alquileres .alq-sub');
+  for (var i = 0; i < subs.length; i++) subs[i].style.display = 'none';
+  document.getElementById('alqSub-' + id).style.display = 'block';
+  var pills = el.parentElement.querySelectorAll('.fpill');
+  for (var j = 0; j < pills.length; j++) pills[j].classList.remove('on');
+  el.classList.add('on');
+  if (id === 'pagos') renderPagos();
+  if (id === 'liquidaciones') renderLiq();
+}
+
+// ── PROPIETARIOS ──
+function renderPropietarios() {
+  var list = document.getElementById('propietarioList');
+  var empty = document.getElementById('propietarioEmpty');
+  if (!list) return;
+  if (!DB.alqPropietarios.length) { list.innerHTML = ''; empty.classList.add('show'); return; }
+  empty.classList.remove('show');
+  var html = '';
+  for (var i = 0; i < DB.alqPropietarios.length; i++) {
+    var p = DB.alqPropietarios[i];
+    var propCount = DB.alqPropiedades.filter(function(x) { return x.propietarioId === p.id; }).length;
+    var comLbl = p.comisionTipo === 'porcentaje' ? p.comisionValor + '% de comisión' : p.comisionTipo === 'fijo' ? fmtMoney(p.comisionValor) + ' fijo por propiedad' : 'Sin comisión';
+    html += '<div class="owner-row" style="flex-wrap:wrap">';
+    html += '<div class="owner-av">' + initialsOf(p.nombre) + '</div>';
+    html += '<div class="owner-info"><div class="owner-name">' + p.nombre + '</div><div class="owner-sub">' + propCount + ' propiedad(es) · ' + comLbl + '</div></div>';
+    html += '<div class="item-actions" style="width:100%"><div class="act-btn" onclick="openPropietarioModal(\'' + p.id + '\')">✏️ Editar</div><div class="act-btn danger" onclick="askDelete(\'alqPropietarios\',\'' + p.id + '\',\'' + p.nombre.replace(/'/g, "\\'") + '\')">🗑️ Borrar</div></div>';
+    html += '</div>';
+  }
+  list.innerHTML = html;
+}
+
+var editingPropietarioId = null;
+function togglePfComision() {
+  var tipo = document.getElementById('pf-comisionTipo').value;
+  var wrap = document.getElementById('pf-comisionValorWrap');
+  var lbl = document.getElementById('pf-comisionValorLbl');
+  if (tipo === 'ninguna') { wrap.style.display = 'none'; }
+  else { wrap.style.display = 'block'; lbl.textContent = tipo === 'porcentaje' ? 'Porcentaje (%)' : 'Monto fijo por propiedad ($)'; }
+}
+function openPropietarioModal(editId) {
+  editingPropietarioId = editId || null;
+  if (editId) {
+    var p = DB.alqPropietarios.find(function(x) { return x.id === editId; });
+    document.getElementById('pf-nombre').value = p.nombre;
+    document.getElementById('pf-tel').value = p.tel || '';
+    document.getElementById('pf-comisionTipo').value = p.comisionTipo || 'ninguna';
+    document.getElementById('pf-comisionValor').value = p.comisionValor || '';
+    document.getElementById('pf-notas').value = p.notas || '';
+    document.getElementById('propietarioModalTitle').textContent = 'Editar propietario';
+  } else {
+    document.getElementById('pf-nombre').value = '';
+    document.getElementById('pf-tel').value = '';
+    document.getElementById('pf-comisionTipo').value = 'ninguna';
+    document.getElementById('pf-comisionValor').value = '';
+    document.getElementById('pf-notas').value = '';
+    document.getElementById('propietarioModalTitle').textContent = 'Nuevo propietario';
+  }
+  togglePfComision();
+  document.getElementById('propietarioModal').classList.add('show');
+}
+function submitPropietario() {
+  var nombre = document.getElementById('pf-nombre').value.trim();
+  if (!nombre) { showToast('⚠️ Escribí el nombre del propietario'); return; }
+  var comisionTipo = document.getElementById('pf-comisionTipo').value;
+  var comisionValor = Number(document.getElementById('pf-comisionValor').value) || 0;
+  if (editingPropietarioId) {
+    var p = DB.alqPropietarios.find(function(x) { return x.id === editingPropietarioId; });
+    p.nombre = nombre;
+    p.tel = document.getElementById('pf-tel').value.trim();
+    p.comisionTipo = comisionTipo;
+    p.comisionValor = comisionValor;
+    p.notas = document.getElementById('pf-notas').value.trim();
+    showToast('✅ Propietario actualizado');
+  } else {
+    DB.alqPropietarios.push({
+      id: uid(), nombre: nombre, tel: document.getElementById('pf-tel').value.trim(),
+      comisionTipo: comisionTipo, comisionValor: comisionValor,
+      notas: document.getElementById('pf-notas').value.trim()
+    });
+    showToast('✅ Propietario agregado: ' + nombre);
+  }
+  saveDB();
+  closeModal('propietarioModal');
+  renderPropietarios();
+  renderPropiedades();
+}
+
+// ── PROPIEDADES ──
+var selConceptos = [];
+function selConcepto(el) {
+  var c = el.getAttribute('data-c');
+  var idx = selConceptos.indexOf(c);
+  if (idx > -1) { selConceptos.splice(idx, 1); el.classList.remove('on'); }
+  else { selConceptos.push(c); el.classList.add('on'); }
+}
+function renderPropiedades() {
+  var list = document.getElementById('propiedadList');
+  var empty = document.getElementById('propiedadEmpty');
+  if (!list) return;
+  if (!DB.alqPropiedades.length) { list.innerHTML = ''; empty.classList.add('show'); return; }
+  empty.classList.remove('show');
+  var html = '';
+  for (var i = 0; i < DB.alqPropiedades.length; i++) {
+    var prop = DB.alqPropiedades[i];
+    var owner = DB.alqPropietarios.find(function(x) { return x.id === prop.propietarioId; });
+    var inq = getInquilinoActual(prop.id);
+    var valor = getValorAlquilerVigente(prop.id);
+    html += '<div class="prop-card" onclick="openPropDetail(\'' + prop.id + '\')">';
+    html += '<div class="prop-hdr"><div><div class="prop-dir">' + prop.direccion + '</div><div class="prop-owner">' + (owner ? owner.nombre : 'Sin propietario') + '</div></div>';
+    html += '<div class="prop-rent">' + (valor ? fmtMoney(valor.monto) : 'Sin definir') + '</div></div>';
+    html += '<div class="prop-meta"><div><b>Inquilino:</b> ' + (inq ? inq.nombre : 'Sin inquilino') + '</div></div>';
+    if (rentUpdateOverdue(prop.id)) html += '<div class="rent-alert">🔴 Actualización de alquiler vencida (+4 meses)</div>';
+    html += '</div>';
+  }
+  list.innerHTML = html;
+}
+
+var editingPropiedadId = null;
+function openPropiedadModal(editId) {
+  if (!DB.alqPropietarios.length) { showToast('⚠️ Primero cargá un propietario'); return; }
+  editingPropiedadId = editId || null;
+  var sel = document.getElementById('pdf-propietario');
+  var opts = '';
+  for (var i = 0; i < DB.alqPropietarios.length; i++) opts += '<option value="' + DB.alqPropietarios[i].id + '">' + DB.alqPropietarios[i].nombre + '</option>';
+  sel.innerHTML = opts;
+  selConceptos = [];
+  var aopts = document.querySelectorAll('#pdf-conceptos .aopt');
+  for (var j = 0; j < aopts.length; j++) aopts[j].classList.remove('on');
+  if (editId) {
+    var p = DB.alqPropiedades.find(function(x) { return x.id === editId; });
+    sel.value = p.propietarioId;
+    document.getElementById('pdf-direccion').value = p.direccion;
+    selConceptos = (p.conceptos || []).slice();
+    for (var k = 0; k < aopts.length; k++) { if (selConceptos.indexOf(aopts[k].getAttribute('data-c')) > -1) aopts[k].classList.add('on'); }
+    document.getElementById('propiedadModalTitle').textContent = 'Editar propiedad';
+  } else {
+    document.getElementById('pdf-direccion').value = '';
+    document.getElementById('propiedadModalTitle').textContent = 'Nueva propiedad';
+  }
+  document.getElementById('propiedadModal').classList.add('show');
+}
+function submitPropiedad() {
+  var direccion = document.getElementById('pdf-direccion').value.trim();
+  var propietarioId = document.getElementById('pdf-propietario').value;
+  if (!direccion) { showToast('⚠️ Escribí la dirección'); return; }
+  if (editingPropiedadId) {
+    var p = DB.alqPropiedades.find(function(x) { return x.id === editingPropiedadId; });
+    p.direccion = direccion;
+    p.propietarioId = propietarioId;
+    p.conceptos = selConceptos.slice();
+    showToast('✅ Propiedad actualizada');
+  } else {
+    DB.alqPropiedades.push({ id: uid(), propietarioId: propietarioId, direccion: direccion, conceptos: selConceptos.slice(), saldoArrastrado: {} });
+    showToast('✅ Propiedad agregada');
+  }
+  saveDB();
+  closeModal('propiedadModal');
+  renderPropiedades();
+  renderPropietarios();
+}
+
+// ── DETALLE DE PROPIEDAD ──
+var currentPropDetailId = null;
+function openPropDetail(id) {
+  currentPropDetailId = id;
+  renderPropDetail(id);
+  document.getElementById('propDetailModal').classList.add('show');
+}
+function renderPropDetail(id) {
+  var prop = DB.alqPropiedades.find(function(x) { return x.id === id; });
+  if (!prop) return;
+  var owner = DB.alqPropietarios.find(function(x) { return x.id === prop.propietarioId; });
+  document.getElementById('propDetailTitle').textContent = prop.direccion;
+  var valores = DB.alqValoresAlquiler.filter(function(x) { return x.propiedadId === id; }).sort(function(a, b) { return new Date(b.fechaDesde) - new Date(a.fechaDesde); });
+  var inq = getInquilinoActual(id);
+  var inqHist = DB.alqInquilinos.filter(function(x) { return x.propiedadId === id && x.fechaFin; }).sort(function(a, b) { return new Date(b.fechaFin) - new Date(a.fechaFin); });
+  var conceptLabels = { expensas: 'Expensas', emos: 'EMOS', municipales: 'Municipales', rentas: 'Rentas' };
+
+  var html = '';
+  html += '<div class="prop-owner" style="margin-bottom:10px">Propietario: <b style="color:var(--text)">' + (owner ? owner.nombre : '—') + '</b></div>';
+  html += '<div class="prop-meta" style="margin-bottom:6px"><div><b>Conceptos activos:</b> ' + (prop.conceptos && prop.conceptos.length ? prop.conceptos.map(function(c) { return conceptLabels[c]; }).join(', ') : 'Solo alquiler') + '</div></div>';
+
+  html += '<div class="section-tag">Valor de alquiler</div>';
+  if (rentUpdateOverdue(id)) html += '<div class="rent-alert">🔴 Pasaron más de 4 meses desde la última actualización</div>';
+  html += '<button class="add-row-btn" style="margin-top:8px" onclick="openValorAlquilerModal(\'' + id + '\')">➕ Cargar nuevo valor</button>';
+  if (valores.length) {
+    for (var i = 0; i < valores.length; i++) {
+      var v = valores[i];
+      html += '<div class="rentval-item"><span>' + fmtMoney(v.monto) + ' — desde ' + fmtDate(v.fechaDesde) + '</span><span style="color:var(--text3)">' + (v.motivo || '') + '</span></div>';
+    }
+  } else {
+    html += '<div class="empty-state-sm show">Todavía no cargaste ningún valor de alquiler</div>';
+  }
+
+  html += '<div class="section-tag">Inquilino actual</div>';
+  if (inq) {
+    html += '<div class="tenant-box"><div class="tname">' + inq.nombre + '</div>';
+    html += '<div class="tmeta">📞 ' + (inq.tel || '—') + '<br>Desde ' + fmtDate(inq.fechaInicio) + '</div>';
+    if (inq.garante && inq.garante.nombre) {
+      html += '<div class="tmeta" style="margin-top:6px"><b>Garante:</b> ' + inq.garante.nombre + (inq.garante.dni ? ' · DNI ' + inq.garante.dni : '') + (inq.garante.tel ? ' · ' + inq.garante.tel : '') + (inq.garante.direccion ? '<br>' + inq.garante.direccion : '') + '</div>';
+    }
+    html += '</div>';
+    html += '<button class="add-row-btn" onclick="openInquilinoModal(\'' + id + '\')">🔄 Cambiar inquilino</button>';
+  } else {
+    html += '<div class="empty-state-sm show">Sin inquilino cargado</div>';
+    html += '<button class="add-row-btn" onclick="openInquilinoModal(\'' + id + '\')">➕ Cargar inquilino</button>';
+  }
+
+  if (inqHist.length) {
+    html += '<div class="section-tag">Inquilinos anteriores</div>';
+    for (var j = 0; j < inqHist.length; j++) {
+      var h = inqHist[j];
+      html += '<div class="rentval-item"><span>' + h.nombre + '</span><span style="color:var(--text3)">' + fmtDate(h.fechaInicio) + ' — ' + fmtDate(h.fechaFin) + '</span></div>';
+    }
+  }
+  document.getElementById('propDetailBody').innerHTML = html;
+}
+function editPropiedadFromDetail() {
+  closeModal('propDetailModal');
+  openPropiedadModal(currentPropDetailId);
+}
+function deletePropiedadFromDetail() {
+  var prop = DB.alqPropiedades.find(function(x) { return x.id === currentPropDetailId; });
+  closeModal('propDetailModal');
+  askDelete('alqPropiedades', currentPropDetailId, prop ? prop.direccion : 'esta propiedad');
+}
+
+// ── VALOR DE ALQUILER ──
+var valorAlquilerPropId = null;
+function openValorAlquilerModal(propId) {
+  valorAlquilerPropId = propId;
+  document.getElementById('vf-monto').value = '';
+  document.getElementById('vf-fecha').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('valorAlquilerModal').classList.add('show');
+}
+function submitValorAlquiler() {
+  var monto = Number(document.getElementById('vf-monto').value);
+  var fecha = document.getElementById('vf-fecha').value;
+  if (!monto) { showToast('⚠️ Ingresá el monto'); return; }
+  if (!fecha) { showToast('⚠️ Ingresá la fecha'); return; }
+  DB.alqValoresAlquiler.push({ id: uid(), propiedadId: valorAlquilerPropId, monto: monto, fechaDesde: fecha, motivo: document.getElementById('vf-motivo').value });
+  saveDB();
+  closeModal('valorAlquilerModal');
+  renderPropDetail(valorAlquilerPropId);
+  renderPropiedades();
+  showToast('✅ Nuevo valor de alquiler cargado');
+}
+
+// ── INQUILINO / GARANTE ──
+var inquilinoPropId = null;
+function openInquilinoModal(propId) {
+  inquilinoPropId = propId;
+  document.getElementById('if-nombre').value = '';
+  document.getElementById('if-tel').value = '';
+  document.getElementById('if-fechaInicio').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('if-gNombre').value = '';
+  document.getElementById('if-gDni').value = '';
+  document.getElementById('if-gTel').value = '';
+  document.getElementById('if-gDireccion').value = '';
+  var inqActual = getInquilinoActual(propId);
+  document.getElementById('inquilinoModalTitle').textContent = inqActual ? 'Cambiar inquilino' : 'Nuevo inquilino';
+  document.getElementById('inquilinoModal').classList.add('show');
+}
+function submitInquilino() {
+  var nombre = document.getElementById('if-nombre').value.trim();
+  var fechaInicio = document.getElementById('if-fechaInicio').value;
+  if (!nombre) { showToast('⚠️ Escribí el nombre del inquilino'); return; }
+  if (!fechaInicio) { showToast('⚠️ Ingresá la fecha de inicio'); return; }
+  var actual = getInquilinoActual(inquilinoPropId);
+  if (actual) { actual.fechaFin = fechaInicio; }
+  DB.alqInquilinos.push({
+    id: uid(), propiedadId: inquilinoPropId, nombre: nombre,
+    tel: document.getElementById('if-tel').value.trim(),
+    fechaInicio: fechaInicio, fechaFin: null,
+    garante: {
+      nombre: document.getElementById('if-gNombre').value.trim(),
+      dni: document.getElementById('if-gDni').value.trim(),
+      tel: document.getElementById('if-gTel').value.trim(),
+      direccion: document.getElementById('if-gDireccion').value.trim()
+    }
+  });
+  saveDB();
+  closeModal('inquilinoModal');
+  renderPropDetail(inquilinoPropId);
+  renderPropiedades();
+  showToast('✅ Inquilino guardado');
+}
+
+// ── PAGOS DEL MES ──
+var currentPagosMes = new Date().toISOString().slice(0, 7);
+function pagosMesNav(dir) { currentPagosMes = addMonths(currentPagosMes, dir); renderPagos(); }
+function renderPagos() {
+  var lbl = document.getElementById('pagosMesLbl');
+  if (lbl) lbl.textContent = mesLabel(currentPagosMes);
+  var list = document.getElementById('pagosList');
+  var empty = document.getElementById('pagosEmpty');
+  if (!list) return;
+  var props = DB.alqPropiedades.filter(function(p) { return getInquilinoActual(p.id); });
+  if (!props.length) { list.innerHTML = ''; empty.classList.add('show'); return; }
+  empty.classList.remove('show');
+  var conceptLabels = { alquiler: 'Alquiler', expensas: 'Expensas', emos: 'EMOS', municipales: 'Municipales', rentas: 'Rentas' };
+  var html = '';
+  for (var i = 0; i < props.length; i++) {
+    var prop = props[i];
+    var inq = getInquilinoActual(prop.id);
+    var valor = getValorAlquilerVigente(prop.id);
+    var pago = DB.alqPagos.find(function(x) { return x.propiedadId === prop.id && x.mes === currentPagosMes; });
+    var conceptosLista = ['alquiler'].concat(prop.conceptos || []);
+
+    html += '<div class="prop-card" style="cursor:default" data-prop="' + prop.id + '">';
+    html += '<div class="prop-hdr"><div><div class="prop-dir">' + prop.direccion + '</div><div class="prop-owner">' + inq.nombre + '</div></div></div>';
+
+    for (var j = 0; j < conceptosLista.length; j++) {
+      var cKey = conceptosLista[j];
+      var saved = pago && pago.conceptos && pago.conceptos[cKey] ? pago.conceptos[cKey] : null;
+      var defMonto = cKey === 'alquiler' && valor ? valor.monto : '';
+      var monto = saved ? saved.monto : defMonto;
+      var estado = saved ? saved.estado : 'pendiente';
+      var montoPagado = saved ? saved.montoPagado : '';
+      var fechaPago = saved ? saved.fechaPago : '';
+      var saldoPrev = (prop.saldoArrastrado && prop.saldoArrastrado[cKey]) ? prop.saldoArrastrado[cKey] : 0;
+
+      html += '<div class="concept-row" data-concepto="' + cKey + '">';
+      html += '<div class="concept-top"><div class="concept-lbl">' + conceptLabels[cKey] + (saldoPrev > 0 ? ' <span style="color:var(--danger)">(arrastra ' + fmtMoney(saldoPrev) + ')</span>' : '') + '</div>';
+      html += '<div class="concept-state">';
+      html += '<div class="cstate-opt' + (estado === 'pagado' ? ' on-pagado' : '') + '" data-e="pagado" onclick="setCState(this)">Pagado</div>';
+      html += '<div class="cstate-opt' + (estado === 'parcial' ? ' on-parcial' : '') + '" data-e="parcial" onclick="setCState(this)">Parcial</div>';
+      html += '<div class="cstate-opt' + (estado === 'pendiente' ? ' on-pendiente' : '') + '" data-e="pendiente" onclick="setCState(this)">Pendiente</div>';
+      html += '</div></div>';
+      html += '<div class="concept-inputs">';
+      html += '<input class="finput" type="number" placeholder="Monto del mes" value="' + monto + '" data-f="monto">';
+      html += '<input class="finput" type="number" placeholder="Monto pagado" value="' + montoPagado + '" data-f="montoPagado">';
+      html += '<input class="finput" type="date" value="' + fechaPago + '" data-f="fechaPago">';
+      html += '</div></div>';
+    }
+
+    html += '<div class="item-actions" style="margin-top:9px">';
+    html += '<div class="act-btn" onclick="guardarPago(\'' + prop.id + '\')" style="border-color:var(--rent);color:var(--rent)">💾 Guardar pagos</div>';
+    if (pago) html += '<div class="act-btn" onclick="verRecibo(\'' + prop.id + '\')" style="border-color:var(--rent);color:var(--rent)">🧾 Ver recibo</div>';
+    html += '</div></div>';
+  }
+  list.innerHTML = html;
+}
+function setCState(el) {
+  var siblings = el.parentElement.querySelectorAll('.cstate-opt');
+  for (var i = 0; i < siblings.length; i++) siblings[i].classList.remove('on-pagado', 'on-parcial', 'on-pendiente');
+  el.classList.add('on-' + el.getAttribute('data-e'));
+}
+function guardarPago(propId) {
+  var card = document.querySelector('.prop-card[data-prop="' + propId + '"]');
+  if (!card) return;
+  var prop = DB.alqPropiedades.find(function(x) { return x.id === propId; });
+  var inq = getInquilinoActual(propId);
+  var rows = card.querySelectorAll('.concept-row');
+  var conceptos = {};
+  var nuevoSaldo = {};
+  for (var i = 0; i < rows.length; i++) {
+    var row = rows[i];
+    var cKey = row.getAttribute('data-concepto');
+    var monto = Number(row.querySelector('[data-f="monto"]').value) || 0;
+    var montoPagado = Number(row.querySelector('[data-f="montoPagado"]').value) || 0;
+    var fechaPago = row.querySelector('[data-f="fechaPago"]').value;
+    var estadoEl = row.querySelector('.cstate-opt.on-pagado, .cstate-opt.on-parcial, .cstate-opt.on-pendiente');
+    var estado = estadoEl ? estadoEl.getAttribute('data-e') : 'pendiente';
+
+    var interes = 0, diasAtraso = 0;
+    if (fechaPago && estado !== 'pendiente') {
+      var dia = Number(fechaPago.split('-')[2]);
+      if (dia > 10) { diasAtraso = dia - 1; interes = Math.round(monto * 0.01 * diasAtraso); }
+    }
+    var totalConInteres = monto + interes;
+    var saldoPrevio = (prop.saldoArrastrado && prop.saldoArrastrado[cKey]) ? prop.saldoArrastrado[cKey] : 0;
+    var debeTotal = totalConInteres + saldoPrevio;
+    var pendienteNuevo = Math.max(0, debeTotal - montoPagado);
+    nuevoSaldo[cKey] = pendienteNuevo;
+
+    conceptos[cKey] = { monto: monto, estado: estado, montoPagado: montoPagado, fechaPago: fechaPago, diasAtraso: diasAtraso, interes: interes, totalConInteres: totalConInteres, saldoPrevio: saldoPrevio, saldoNuevo: pendienteNuevo };
+  }
+  prop.saldoArrastrado = nuevoSaldo;
+
+  var pago = DB.alqPagos.find(function(x) { return x.propiedadId === propId && x.mes === currentPagosMes; });
+  if (!pago) { pago = { id: uid(), propiedadId: propId, inquilinoId: inq ? inq.id : null, mes: currentPagosMes, conceptos: {} }; DB.alqPagos.push(pago); }
+  pago.conceptos = conceptos;
+  pago.inquilinoId = inq ? inq.id : null;
+
+  saveDB();
+  renderPagos();
+  showToast('✅ Pagos de ' + prop.direccion + ' guardados');
+}
+
+function verRecibo(propId) {
+  var prop = DB.alqPropiedades.find(function(x) { return x.id === propId; });
+  var pago = DB.alqPagos.find(function(x) { return x.propiedadId === propId && x.mes === currentPagosMes; });
+  if (!prop || !pago) { showToast('⚠️ Todavía no guardaste el pago de este mes'); return; }
+  var inq = DB.alqInquilinos.find(function(x) { return x.id === pago.inquilinoId; });
+  var conceptLabels = { alquiler: 'Alquiler', expensas: 'Expensas', emos: 'EMOS', municipales: 'Municipales', rentas: 'Rentas' };
+  var rowsHtml = '', totalPagado = 0, totalDebe = 0;
+  for (var k in pago.conceptos) {
+    var c = pago.conceptos[k];
+    totalPagado += c.montoPagado;
+    totalDebe += c.totalConInteres + c.saldoPrevio;
+    rowsHtml += '<tr><td>' + conceptLabels[k] + '</td><td>' + fmtMoney(c.monto) + '</td><td>' + (c.interes ? fmtMoney(c.interes) + ' (' + c.diasAtraso + ' días)' : '—') + '</td><td>' + (c.saldoPrevio ? fmtMoney(c.saldoPrevio) : '—') + '</td><td>' + fmtMoney(c.montoPagado) + '</td><td>' + (c.saldoNuevo > 0 ? fmtMoney(c.saldoNuevo) : '$0') + '</td></tr>';
+  }
+  var pendiente = totalDebe - totalPagado > 0 ? totalDebe - totalPagado : 0;
+  var html = '<html><head><meta charset="UTF-8"><title>Recibo</title><style>' +
+    'body{font-family:Arial,sans-serif;padding:30px;color:#1A1510}' +
+    'h1{font-size:18px;margin-bottom:2px}h2{font-size:13px;font-weight:normal;color:#555;margin-bottom:20px}' +
+    'table{width:100%;border-collapse:collapse;margin-top:15px}th,td{border:1px solid #ccc;padding:8px;font-size:12px;text-align:left}th{background:#f0f0f0}' +
+    '.tot{margin-top:14px;font-size:14px;font-weight:bold}' +
+    '.firma{margin-top:60px;display:flex;justify-content:space-between}.firma div{width:45%;text-align:center;border-top:1px solid #333;padding-top:6px;font-size:12px}' +
+    '</style></head><body>' +
+    '<h1>Karina Elena Estudio Jurídico — Recibo de pago</h1>' +
+    '<h2>' + mesLabel(currentPagosMes) + ' · ' + prop.direccion + '</h2>' +
+    '<p><b>Inquilino:</b> ' + (inq ? inq.nombre : '—') + '</p>' +
+    '<table><thead><tr><th>Concepto</th><th>Monto mes</th><th>Interés</th><th>Saldo anterior</th><th>Pagado</th><th>Saldo actual</th></tr></thead><tbody>' + rowsHtml + '</tbody></table>' +
+    '<div class="tot">Total pagado: ' + fmtMoney(totalPagado) + ' — Saldo pendiente: ' + fmtMoney(pendiente) + '</div>' +
+    '<div class="firma"><div>Firma inquilino</div><div>Firma Karina Elena Estudio Jurídico</div></div>' +
+    '</body></html>';
+  var w = window.open('', '_blank');
+  w.document.write(html);
+  w.document.close();
+  w.focus();
+  setTimeout(function() { w.print(); }, 300);
+}
+
+// ── LIQUIDACIONES ──
+var currentLiqMes = new Date().toISOString().slice(0, 7);
+function liqMesNav(dir) { currentLiqMes = addMonths(currentLiqMes, dir); renderLiq(); }
+function renderLiq() {
+  var lbl = document.getElementById('liqMesLbl');
+  if (lbl) lbl.textContent = mesLabel(currentLiqMes);
+  var list = document.getElementById('liqList');
+  var empty = document.getElementById('liqEmpty');
+  if (!list) return;
+  if (!DB.alqPropietarios.length) { list.innerHTML = ''; empty.classList.add('show'); return; }
+  empty.classList.remove('show');
+  var html = '';
+  for (var i = 0; i < DB.alqPropietarios.length; i++) {
+    var owner = DB.alqPropietarios[i];
+    var misProps = DB.alqPropiedades.filter(function(x) { return x.propietarioId === owner.id; });
+    var totalCobrado = 0, propsConPago = 0;
+    for (var j = 0; j < misProps.length; j++) {
+      var pago = DB.alqPagos.find(function(x) { return x.propiedadId === misProps[j].id && x.mes === currentLiqMes; });
+      if (pago) { propsConPago++; for (var k in pago.conceptos) totalCobrado += pago.conceptos[k].montoPagado; }
+    }
+    var comision = 0;
+    if (owner.comisionTipo === 'porcentaje') comision = totalCobrado * (owner.comisionValor / 100);
+    else if (owner.comisionTipo === 'fijo') comision = owner.comisionValor * propsConPago;
+    var neto = totalCobrado - comision;
+    var liqGuardada = DB.alqLiquidaciones.find(function(x) { return x.clienteId === owner.id && x.mes === currentLiqMes; });
+
+    html += '<div class="liq-card">';
+    html += '<div class="owner-name">' + owner.nombre + '</div>';
+    html += '<div class="owner-sub">' + misProps.length + ' propiedad(es) · ' + propsConPago + ' con pago cargado este mes</div>';
+    html += '<div class="liq-total">' + fmtMoney(neto) + '</div>';
+    html += '<div class="owner-sub">Cobrado: ' + fmtMoney(totalCobrado) + ' — Comisión: ' + fmtMoney(comision) + '</div>';
+    if (liqGuardada) html += '<span class="liq-badge' + (liqGuardada.firmada ? '' : ' pend') + '">' + (liqGuardada.firmada ? '✓ Firmada' : 'Pendiente de firma') + '</span>';
+    html += '<div class="item-actions" style="margin-top:10px">';
+    html += '<div class="act-btn" style="border-color:var(--rent);color:var(--rent)" onclick="generarLiquidacion(\'' + owner.id + '\')">🧾 Generar / imprimir</div>';
+    if (liqGuardada && !liqGuardada.firmada) html += '<div class="act-btn" onclick="marcarFirmada(\'' + owner.id + '\')">✅ Marcar firmada</div>';
+    html += '</div></div>';
+  }
+  list.innerHTML = html;
+}
+function generarLiquidacion(ownerId) {
+  var owner = DB.alqPropietarios.find(function(x) { return x.id === ownerId; });
+  var misProps = DB.alqPropiedades.filter(function(x) { return x.propietarioId === ownerId; });
+  var conceptLabels = { alquiler: 'Alquiler', expensas: 'Expensas', emos: 'EMOS', municipales: 'Municipales', rentas: 'Rentas' };
+  var rowsHtml = '', totalCobrado = 0, propsConPago = 0;
+  for (var j = 0; j < misProps.length; j++) {
+    var pago = DB.alqPagos.find(function(x) { return x.propiedadId === misProps[j].id && x.mes === currentLiqMes; });
+    if (!pago) continue;
+    propsConPago++;
+    var inq = DB.alqInquilinos.find(function(x) { return x.id === pago.inquilinoId; });
+    for (var k in pago.conceptos) {
+      var c = pago.conceptos[k];
+      totalCobrado += c.montoPagado;
+      rowsHtml += '<tr><td>' + misProps[j].direccion + '</td><td>' + (inq ? inq.nombre : '—') + '</td><td>' + conceptLabels[k] + '</td><td>' + fmtMoney(c.montoPagado) + '</td></tr>';
+    }
+  }
+  var comision = 0;
+  if (owner.comisionTipo === 'porcentaje') comision = totalCobrado * (owner.comisionValor / 100);
+  else if (owner.comisionTipo === 'fijo') comision = owner.comisionValor * propsConPago;
+  var neto = totalCobrado - comision;
+
+  var existente = DB.alqLiquidaciones.find(function(x) { return x.clienteId === ownerId && x.mes === currentLiqMes; });
+  if (!existente) { DB.alqLiquidaciones.push({ id: uid(), clienteId: ownerId, mes: currentLiqMes, totalCobrado: totalCobrado, comision: comision, neto: neto, firmada: false, fecha: new Date().toISOString() }); }
+  else { existente.totalCobrado = totalCobrado; existente.comision = comision; existente.neto = neto; }
+  saveDB();
+  renderLiq();
+
+  var html = '<html><head><meta charset="UTF-8"><title>Liquidación</title><style>' +
+    'body{font-family:Arial,sans-serif;padding:30px;color:#1A1510}' +
+    'h1{font-size:18px;margin-bottom:2px}h2{font-size:13px;font-weight:normal;color:#555;margin-bottom:20px}' +
+    'table{width:100%;border-collapse:collapse;margin-top:15px}th,td{border:1px solid #ccc;padding:8px;font-size:12px;text-align:left}th{background:#f0f0f0}' +
+    '.tot{margin-top:14px;font-size:14px}.tot b{font-size:17px}' +
+    '.firma{margin-top:60px;display:flex;justify-content:space-between}.firma div{width:45%;text-align:center;border-top:1px solid #333;padding-top:6px;font-size:12px}' +
+    '</style></head><body>' +
+    '<h1>Karina Elena Estudio Jurídico — Liquidación de alquileres</h1>' +
+    '<h2>' + mesLabel(currentLiqMes) + ' · Propietario: ' + owner.nombre + '</h2>' +
+    '<table><thead><tr><th>Propiedad</th><th>Inquilino</th><th>Concepto</th><th>Cobrado</th></tr></thead><tbody>' + rowsHtml + '</tbody></table>' +
+    '<div class="tot">Total cobrado: ' + fmtMoney(totalCobrado) + '</div>' +
+    '<div class="tot">Comisión administración: ' + fmtMoney(comision) + '</div>' +
+    '<div class="tot"><b>Neto a entregar: ' + fmtMoney(neto) + '</b></div>' +
+    '<div class="firma"><div>Firma ' + owner.nombre + '</div><div>Firma Karina Elena Estudio Jurídico</div></div>' +
+    '</body></html>';
+  var w = window.open('', '_blank');
+  w.document.write(html);
+  w.document.close();
+  w.focus();
+  setTimeout(function() { w.print(); }, 300);
+}
+function marcarFirmada(ownerId) {
+  var liq = DB.alqLiquidaciones.find(function(x) { return x.clienteId === ownerId && x.mes === currentLiqMes; });
+  if (liq) { liq.firmada = true; saveDB(); renderLiq(); showToast('✅ Liquidación marcada como firmada'); }
+}
+
+// ══════════════════════════ GASTOS ══════════════════════════
+function gastosTab(id, el) {
+  var subs = document.querySelectorAll('#screen-gastos .gasto-sub');
+  for (var i = 0; i < subs.length; i++) subs[i].style.display = 'none';
+  document.getElementById('gastoSub-' + id).style.display = 'block';
+  var pills = el.parentElement.querySelectorAll('.fpill');
+  for (var j = 0; j < pills.length; j++) pills[j].classList.remove('on');
+  el.classList.add('on');
+  if (id === 'oficina') renderGastosOficina();
+  if (id === 'clientes') renderGastosClientes();
+}
+
+function getMonday(d) {
+  var day = d.getDay();
+  var diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  var m = new Date(d);
+  m.setDate(diff);
+  m.setHours(0, 0, 0, 0);
+  return m;
+}
+
+// ── GASTOS DE OFICINA ──
+var gastosOficinaMode = 'mes';
+var gastosOficinaMes = new Date().toISOString().slice(0, 7);
+var gastosOficinaSemana = getMonday(new Date()).toISOString().slice(0, 10);
+
+function setGastosOficinaMode(mode, el) {
+  gastosOficinaMode = mode;
+  var pills = el.parentElement.querySelectorAll('.fpill');
+  for (var j = 0; j < pills.length; j++) pills[j].classList.remove('on');
+  el.classList.add('on');
+  renderGastosOficina();
+}
+function gastosOficinaNav(dir) {
+  if (gastosOficinaMode === 'mes') {
+    gastosOficinaMes = addMonths(gastosOficinaMes, dir);
+  } else {
+    var d = new Date(gastosOficinaSemana + 'T12:00:00');
+    d.setDate(d.getDate() + dir * 7);
+    gastosOficinaSemana = d.toISOString().slice(0, 10);
+  }
+  renderGastosOficina();
+}
+function gastosOficinaPeriodLabel() {
+  if (gastosOficinaMode === 'mes') return mesLabel(gastosOficinaMes);
+  var start = new Date(gastosOficinaSemana + 'T12:00:00');
+  var end = new Date(start); end.setDate(end.getDate() + 6);
+  return start.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' }) + ' al ' + end.toLocaleDateString('es-AR', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+function gastoOficinaInPeriod(fecha) {
+  if (!fecha) return false;
+  if (gastosOficinaMode === 'mes') return fecha.slice(0, 7) === gastosOficinaMes;
+  var start = new Date(gastosOficinaSemana + 'T00:00:00');
+  var end = new Date(start); end.setDate(end.getDate() + 7);
+  var f = new Date(fecha + 'T12:00:00');
+  return f >= start && f < end;
+}
+function renderGastosOficina() {
+  var lbl = document.getElementById('gastosOfLbl');
+  if (lbl) lbl.textContent = gastosOficinaPeriodLabel();
+  var list = document.getElementById('gastoOficinaList');
+  var empty = document.getElementById('gastoOficinaEmpty');
+  if (!list) return;
+  var items = DB.gastosOficina.filter(function(x) { return gastoOficinaInPeriod(x.fecha); }).sort(function(a, b) { return new Date(b.fecha) - new Date(a.fecha); });
+  var total = 0;
+  for (var i = 0; i < items.length; i++) total += Number(items[i].monto);
+  document.getElementById('gastosOfTotal').textContent = fmtMoney(total);
+  if (!items.length) { list.innerHTML = ''; empty.classList.add('show'); return; }
+  empty.classList.remove('show');
+  var html = '';
+  for (var j = 0; j < items.length; j++) {
+    var g = items[j];
+    html += '<div class="hon-row"><div class="hon-top"><div class="hon-info"><div class="hon-client">' + g.concepto + '</div><div class="hon-concept">' + fmtDate(g.fecha) + '</div></div><div class="hon-right"><div class="hon-amount">' + fmtMoney(g.monto) + '</div></div></div>';
+    html += '<div class="item-actions"><div class="act-btn" onclick="openGastoOficinaModal(\'' + g.id + '\')">✏️ Editar</div><div class="act-btn danger" onclick="askDelete(\'gastosOficina\',\'' + g.id + '\',\'' + g.concepto.replace(/'/g, "\\'") + '\')">🗑️ Borrar</div></div></div>';
+  }
+  list.innerHTML = html;
+}
+var editingGastoOficinaId = null;
+function openGastoOficinaModal(editId) {
+  editingGastoOficinaId = editId || null;
+  if (editId) {
+    var g = DB.gastosOficina.find(function(x) { return x.id === editId; });
+    document.getElementById('gof-fecha').value = g.fecha;
+    document.getElementById('gof-concepto').value = g.concepto;
+    document.getElementById('gof-monto').value = g.monto;
+    document.getElementById('gastoOficinaModalTitle').textContent = 'Editar gasto de oficina';
+  } else {
+    document.getElementById('gof-fecha').value = new Date().toISOString().slice(0, 10);
+    document.getElementById('gof-concepto').value = '';
+    document.getElementById('gof-monto').value = '';
+    document.getElementById('gastoOficinaModalTitle').textContent = 'Nuevo gasto de oficina';
+  }
+  document.getElementById('gastoOficinaModal').classList.add('show');
+}
+function submitGastoOficina() {
+  var fecha = document.getElementById('gof-fecha').value;
+  var concepto = document.getElementById('gof-concepto').value.trim();
+  var monto = Number(document.getElementById('gof-monto').value);
+  if (!fecha) { showToast('⚠️ Ingresá la fecha'); return; }
+  if (!concepto) { showToast('⚠️ Escribí el concepto'); return; }
+  if (!monto) { showToast('⚠️ Ingresá el monto'); return; }
+  if (editingGastoOficinaId) {
+    var g = DB.gastosOficina.find(function(x) { return x.id === editingGastoOficinaId; });
+    g.fecha = fecha; g.concepto = concepto; g.monto = monto;
+    showToast('✅ Gasto actualizado');
+  } else {
+    DB.gastosOficina.push({ id: uid(), fecha: fecha, concepto: concepto, monto: monto });
+    showToast('✅ Gasto de oficina agregado');
+  }
+  saveDB();
+  closeModal('gastoOficinaModal');
+  renderGastosOficina();
+}
+
+// ── GASTOS DE CLIENTES ──
+var currentGastosClienteFiltro = 'todos';
+function filterGastosCliente(f, el) {
+  currentGastosClienteFiltro = f;
+  var pills = el.parentElement.querySelectorAll('.fpill');
+  for (var j = 0; j < pills.length; j++) pills[j].classList.remove('on');
+  el.classList.add('on');
+  renderGastosClientes();
+}
+function renderGastosClientes() {
+  var list = document.getElementById('gastoClienteList');
+  var empty = document.getElementById('gastoClienteEmpty');
+  if (!list) return;
+  var items = DB.gastosClientes.slice().sort(function(a, b) { return new Date(b.fecha) - new Date(a.fecha); });
+  var pendienteTotal = 0;
+  for (var i = 0; i < items.length; i++) if (items[i].estado === 'pendiente') pendienteTotal += Number(items[i].monto);
+  document.getElementById('gastosClPendiente').textContent = fmtMoney(pendienteTotal);
+  if (currentGastosClienteFiltro !== 'todos') items = items.filter(function(x) { return x.estado === currentGastosClienteFiltro; });
+  if (!items.length) { list.innerHTML = ''; empty.classList.add('show'); return; }
+  empty.classList.remove('show');
+  var html = '';
+  for (var j = 0; j < items.length; j++) {
+    var g = items[j];
+    var cliente = DB.clientes.find(function(x) { return x.id === g.clienteId; });
+    html += '<div class="hon-row"><div class="hon-top"><div class="hon-dot" style="background:' + (g.estado === 'reintegrado' ? 'var(--success)' : 'var(--warning)') + '"></div>';
+    html += '<div class="hon-info"><div class="hon-client">' + (cliente ? cliente.nombre : 'Cliente eliminado') + '</div><div class="hon-concept">' + g.concepto + ' · ' + fmtDate(g.fecha) + '</div></div>';
+    html += '<div class="hon-right"><div class="hon-amount">' + fmtMoney(g.monto) + '</div><div class="hon-venc ' + (g.estado === 'reintegrado' ? 'cup' : 'cwarn') + '">' + (g.estado === 'reintegrado' ? 'Reintegrado ✓' : 'Pendiente') + '</div></div></div>';
+    html += '<div class="item-actions"><div class="act-btn" onclick="toggleGastoClienteEstado(\'' + g.id + '\')">🔁 ' + (g.estado === 'reintegrado' ? 'Marcar pendiente' : 'Marcar reintegrado') + '</div><div class="act-btn" onclick="openGastoClienteModal(\'' + g.id + '\')">✏️ Editar</div><div class="act-btn danger" onclick="askDelete(\'gastosClientes\',\'' + g.id + '\',\'' + g.concepto.replace(/'/g, "\\'") + '\')">🗑️ Borrar</div></div></div>';
+  }
+  list.innerHTML = html;
+}
+function toggleGastoClienteEstado(id) {
+  var g = DB.gastosClientes.find(function(x) { return x.id === id; });
+  if (!g) return;
+  g.estado = g.estado === 'reintegrado' ? 'pendiente' : 'reintegrado';
+  saveDB();
+  renderGastosClientes();
+  showToast('✅ Estado actualizado');
+}
+var editingGastoClienteId = null;
+function openGastoClienteModal(editId) {
+  if (!DB.clientes.length) { showToast('⚠️ Primero cargá un cliente en la sección Clientes'); return; }
+  editingGastoClienteId = editId || null;
+  var sel = document.getElementById('gcl-cliente');
+  var opts = '';
+  for (var i = 0; i < DB.clientes.length; i++) opts += '<option value="' + DB.clientes[i].id + '">' + DB.clientes[i].nombre + '</option>';
+  sel.innerHTML = opts;
+  if (editId) {
+    var g = DB.gastosClientes.find(function(x) { return x.id === editId; });
+    document.getElementById('gcl-fecha').value = g.fecha;
+    sel.value = g.clienteId;
+    document.getElementById('gcl-concepto').value = g.concepto;
+    document.getElementById('gcl-monto').value = g.monto;
+    document.getElementById('gcl-estado').value = g.estado;
+    document.getElementById('gastoClienteModalTitle').textContent = 'Editar gasto de cliente';
+  } else {
+    document.getElementById('gcl-fecha').value = new Date().toISOString().slice(0, 10);
+    document.getElementById('gcl-concepto').value = '';
+    document.getElementById('gcl-monto').value = '';
+    document.getElementById('gcl-estado').value = 'pendiente';
+    document.getElementById('gastoClienteModalTitle').textContent = 'Nuevo gasto de cliente';
+  }
+  document.getElementById('gastoClienteModal').classList.add('show');
+}
+function submitGastoCliente() {
+  var fecha = document.getElementById('gcl-fecha').value;
+  var clienteId = document.getElementById('gcl-cliente').value;
+  var concepto = document.getElementById('gcl-concepto').value.trim();
+  var monto = Number(document.getElementById('gcl-monto').value);
+  var estado = document.getElementById('gcl-estado').value;
+  if (!fecha) { showToast('⚠️ Ingresá la fecha'); return; }
+  if (!concepto) { showToast('⚠️ Escribí el concepto'); return; }
+  if (!monto) { showToast('⚠️ Ingresá el monto'); return; }
+  if (editingGastoClienteId) {
+    var g = DB.gastosClientes.find(function(x) { return x.id === editingGastoClienteId; });
+    g.fecha = fecha; g.clienteId = clienteId; g.concepto = concepto; g.monto = monto; g.estado = estado;
+    showToast('✅ Gasto actualizado');
+  } else {
+    DB.gastosClientes.push({ id: uid(), fecha: fecha, clienteId: clienteId, concepto: concepto, monto: monto, estado: estado });
+    showToast('✅ Gasto de cliente agregado');
+  }
+  saveDB();
+  closeModal('gastoClienteModal');
+  renderGastosClientes();
 }
 
 // ── RENDER: TAREAS ──
@@ -2352,6 +3405,10 @@ function renderAll() {
   renderClients();
   renderExpedientes();
   renderHonorarios();
+  renderPropietarios();
+  renderPropiedades();
+  renderGastosOficina();
+  renderGastosClientes();
   renderTareas();
   renderNovedades();
   renderCalendar();
@@ -2396,6 +3453,16 @@ function confirmDelete() {
   else if (col === 'tareas') { renderTareas(); renderInformes(); renderEquipo(); }
   else if (col === 'novedades') renderNovedades();
   else if (col === 'eventos') renderCalendar();
+  else if (col === 'alqPropietarios') renderPropietarios();
+  else if (col === 'alqPropiedades') {
+    DB.alqValoresAlquiler = DB.alqValoresAlquiler.filter(function(x) { return x.propiedadId !== id; });
+    DB.alqInquilinos = DB.alqInquilinos.filter(function(x) { return x.propiedadId !== id; });
+    DB.alqPagos = DB.alqPagos.filter(function(x) { return x.propiedadId !== id; });
+    saveDB();
+    renderPropiedades();
+  }
+  else if (col === 'gastosOficina') renderGastosOficina();
+  else if (col === 'gastosClientes') renderGastosClientes();
   renderDashboard();
   showToast('🗑️ Eliminado correctamente');
 }
