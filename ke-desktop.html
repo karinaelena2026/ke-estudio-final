@@ -1933,7 +1933,7 @@ function fmtMonedaMonto(monto, moneda) {
   return fmtMoney(monto);
 }
 var PORTAL_URLS = {
-  municipales: 'https://app.riocuarto.gov.ar:8443/gestiontributaria/servlet/com.recursos.hceduimpmul',
+  municipales: 'https://app.riocuarto.gov.ar:8443/gestiontributaria/servlet/com.recursos.hceduimpmul?Inmo',
   rentas: 'https://www.rentascordoba.gob.ar/emision/ver-y-pagar/inmobiliario/detalle-de-cuota',
   emos: 'https://emosvirtual.riocuarto.gov.ar:9092/emosweb/emosweb.ap.reimpresioncomprobantes'
 };
@@ -1943,6 +1943,15 @@ function copiarCuenta(valor) {
   } else {
     showToast('⚠️ No se pudo copiar en este navegador');
   }
+}
+function parseCuentaCadastral(str) {
+  var mC = str.match(/C:\s*(\d+)/i);
+  var mS = str.match(/S:\s*(\d+)/i);
+  var mM = str.match(/M:\s*(\d+)/i);
+  var mP = str.match(/P:\s*(\d+)/i);
+  var mPh = str.match(/Ph:\s*(\d+)/i);
+  if (!mC || !mS || !mM || !mP) return null;
+  return { C: mC[1], S: mS[1], M: mM[1], P: mP[1], Ph: mPh ? mPh[1] : undefined };
 }
 function mesLabel(mesStr) {
   var months = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
@@ -2270,12 +2279,24 @@ function renderPropDetail(id) {
     for (var cu in prop.cuentas) {
       if (!prop.cuentas[cu]) continue;
       var portalUrl = PORTAL_URLS[cu];
-      cuentaHtml += '<div class="rentval-item" style="align-items:center">';
-      cuentaHtml += '<span>' + cuentaLbl[cu] + ': <b>' + prop.cuentas[cu] + '</b></span>';
-      cuentaHtml += '<span style="display:flex;gap:6px">';
-      cuentaHtml += '<button class="print-btn" onclick="copiarCuenta(\'' + prop.cuentas[cu].replace(/'/g, "\\'") + '\')">📋 Copiar</button>';
+      var segmentos = parseCuentaCadastral(prop.cuentas[cu]);
+      cuentaHtml += '<div class="rentval-item" style="align-items:flex-start;flex-direction:column;gap:6px">';
+      cuentaHtml += '<div style="display:flex;justify-content:space-between;width:100%"><span>' + cuentaLbl[cu] + ': <b>' + prop.cuentas[cu] + '</b></span>';
       if (portalUrl) cuentaHtml += '<button class="print-btn" onclick="window.open(\'' + portalUrl + '\',\'_blank\')">🔗 Abrir sitio</button>';
-      cuentaHtml += '</span></div>';
+      cuentaHtml += '</div>';
+      if (segmentos) {
+        cuentaHtml += '<div style="display:flex;gap:5px;flex-wrap:wrap">';
+        var segLabels = ['Circ','Secc','Mza','Parc','Ph'];
+        var segKeys = ['C','S','M','P','Ph'];
+        for (var sgi = 0; sgi < segKeys.length; sgi++) {
+          if (segmentos[segKeys[sgi]] === undefined) continue;
+          cuentaHtml += '<button class="print-btn" onclick="copiarCuenta(\'' + segmentos[segKeys[sgi]] + '\')">📋 ' + segLabels[sgi] + ': ' + segmentos[segKeys[sgi]] + '</button>';
+        }
+        cuentaHtml += '</div>';
+      } else {
+        cuentaHtml += '<button class="print-btn" onclick="copiarCuenta(\'' + prop.cuentas[cu].replace(/'/g, "\\'") + '\')">📋 Copiar número completo</button>';
+      }
+      cuentaHtml += '</div>';
     }
     html += '<div class="section-tag">Números de cuenta</div>' + cuentaHtml;
   }
