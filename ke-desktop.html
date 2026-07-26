@@ -810,11 +810,12 @@ textarea.finput{resize:none;height:70px;line-height:1.5}
           <div class="fpill on" onclick="filterInquilinosEstado('actuales',this)">Actuales</div>
           <div class="fpill" onclick="filterInquilinosEstado('todos',this)">Todos (con historial)</div>
         </div>
+        <button class="add-row-btn" onclick="openInquilinoModalGeneral()">➕ Agregar inquilino</button>
         <div id="inquilinoTabList"></div>
         <div id="inquilinoTabEmpty" class="empty-state">
           <div class="empty-icon">🧑‍🤝‍🧑</div>
           <div class="empty-title">Todavía no hay inquilinos cargados</div>
-          <div class="empty-sub">Se cargan desde el detalle de cada propiedad</div>
+          <div class="empty-sub">Tocá "Agregar inquilino" para cargar el primero</div>
         </div>
       </div>
 
@@ -984,6 +985,9 @@ textarea.finput{resize:none;height:70px;line-height:1.5}
         <div class="section-tag">Respaldo de datos</div>
         <button class="add-row-btn" onclick="exportBackup()">💾 Descargar copia de seguridad</button>
         <div class="empty-sub" style="text-align:left;margin-top:6px">Guarda un archivo con todos los datos del estudio (clientes, expedientes, alquileres, gastos, etc.) por si algo falla. Conviene hacerlo cada tanto.</div>
+        <div class="section-tag" style="margin-top:16px">Importar propiedades del Excel</div>
+        <button class="add-row-btn" onclick="importarDatosExcel()">📥 Importar propiedades (Bonansea) — una vez</button>
+        <div class="empty-sub" style="text-align:left;margin-top:6px">Carga de una sola vez las propiedades, inquilinos y números de cuenta detectados en la planilla de liquidación. Revisá cada una después, hay algunas marcadas como "cedidas" o "en juicio" que conviene chequear.</div>
       </div>
     </section>
 
@@ -1151,8 +1155,21 @@ textarea.finput{resize:none;height:70px;line-height:1.5}
         <div class="aopt" data-c="expensas" onclick="selConcepto(this)">Expensas</div>
         <div class="aopt" data-c="emos" onclick="selConcepto(this)">EMOS</div>
         <div class="aopt" data-c="municipales" onclick="selConcepto(this)">Municipales</div>
+        <div class="aopt" data-c="epec" onclick="selConcepto(this)">EPEC</div>
         <div class="aopt" data-c="rentas" onclick="selConcepto(this)">Rentas</div>
       </div>
+      <span class="flabel">¿A nombre de quién está cada servicio?</span>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+        <div><span class="flabel" style="font-size:9px;margin:0 0 3px">Expensas</span><select class="finput" id="pdf-tit-expensas" style="margin:0"><option value="inquilino">Inquilino</option><option value="propietario">Propietario</option></select></div>
+        <div><span class="flabel" style="font-size:9px;margin:0 0 3px">EMOS</span><select class="finput" id="pdf-tit-emos" style="margin:0"><option value="inquilino">Inquilino</option><option value="propietario">Propietario</option></select></div>
+        <div><span class="flabel" style="font-size:9px;margin:0 0 3px">Municipales</span><select class="finput" id="pdf-tit-municipales" style="margin:0"><option value="inquilino">Inquilino</option><option value="propietario">Propietario</option></select></div>
+        <div><span class="flabel" style="font-size:9px;margin:0 0 3px">EPEC</span><select class="finput" id="pdf-tit-epec" style="margin:0"><option value="inquilino">Inquilino</option><option value="propietario">Propietario</option></select></div>
+      </div>
+      <span class="flabel">Números de cuenta de cada servicio (para consultas rápidas)</span>
+      <input class="finput" id="pdf-cuenta-emos" placeholder="Cuenta EMOS. Ej: C:1 S:1 M:50 P:31 Ph:10">
+      <input class="finput" id="pdf-cuenta-municipales" placeholder="Cuenta Municipalidad. Ej: C:1 S:1 M:50 P:31 Ph:10">
+      <input class="finput" id="pdf-cuenta-rentas" placeholder="Cuenta Rentas. Ej: N 240525526403">
+      <input class="finput" id="pdf-cuenta-epec" placeholder="Cuenta EPEC. Ej: C:5896318 Contr:0101216609">
       <button class="msubmit" onclick="submitPropiedad()">✅ Guardar propiedad</button>
       <button class="mcancel" onclick="closeModal('propiedadModal')">Cancelar</button>
     </div>
@@ -1202,6 +1219,10 @@ textarea.finput{resize:none;height:70px;line-height:1.5}
     <div class="modal" style="max-height:85vh;overflow-y:auto">
       <div class="mhandle"></div>
       <div class="mtitle" id="inquilinoModalTitle">Nuevo inquilino</div>
+      <div id="if-propiedadWrap" style="display:none">
+        <span class="flabel">Propiedad *</span>
+        <select class="finput" id="if-propiedadSelect" onchange="onIfPropiedadChange()"></select>
+      </div>
       <span class="flabel">Nombre y apellido *</span>
       <input class="finput" id="if-nombre" placeholder="Ej: Lucas Ferreyra">
       <span class="flabel">Teléfono</span>
@@ -1911,6 +1932,18 @@ function fmtMonedaMonto(monto, moneda) {
   if (moneda === 'USD') return 'USD ' + Number(monto).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   return fmtMoney(monto);
 }
+var PORTAL_URLS = {
+  municipales: 'https://app.riocuarto.gov.ar:8443/gestiontributaria/servlet/com.recursos.hceduimpmul',
+  rentas: 'https://www.rentascordoba.gob.ar/emision/ver-y-pagar/inmobiliario/detalle-de-cuota',
+  emos: 'https://emosvirtual.riocuarto.gov.ar:9092/emosweb/emosweb.ap.reimpresioncomprobantes'
+};
+function copiarCuenta(valor) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(valor).then(function() { showToast('📋 Copiado: ' + valor); }).catch(function() { showToast('⚠️ No se pudo copiar'); });
+  } else {
+    showToast('⚠️ No se pudo copiar en este navegador');
+  }
+}
 function mesLabel(mesStr) {
   var months = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   var parts = mesStr.split('-');
@@ -2142,15 +2175,25 @@ function openPropiedadModal(editId) {
   selConceptos = [];
   var aopts = document.querySelectorAll('#pdf-conceptos .aopt');
   for (var j = 0; j < aopts.length; j++) aopts[j].classList.remove('on');
+  var titularKeys = ['expensas', 'emos', 'municipales', 'epec'];
+  var cuentaKeys = ['emos', 'municipales', 'rentas', 'epec'];
   if (editId) {
     var p = DB.alqPropiedades.find(function(x) { return x.id === editId; });
     sel.value = p.propietarioId;
     document.getElementById('pdf-direccion').value = p.direccion;
     selConceptos = (p.conceptos || []).slice();
     for (var k = 0; k < aopts.length; k++) { if (selConceptos.indexOf(aopts[k].getAttribute('data-c')) > -1) aopts[k].classList.add('on'); }
+    for (var t = 0; t < titularKeys.length; t++) {
+      document.getElementById('pdf-tit-' + titularKeys[t]).value = (p.titulares && p.titulares[titularKeys[t]]) || 'inquilino';
+    }
+    for (var c = 0; c < cuentaKeys.length; c++) {
+      document.getElementById('pdf-cuenta-' + cuentaKeys[c]).value = (p.cuentas && p.cuentas[cuentaKeys[c]]) || '';
+    }
     document.getElementById('propiedadModalTitle').textContent = 'Editar propiedad';
   } else {
     document.getElementById('pdf-direccion').value = '';
+    for (var t2 = 0; t2 < titularKeys.length; t2++) document.getElementById('pdf-tit-' + titularKeys[t2]).value = 'inquilino';
+    for (var c2 = 0; c2 < cuentaKeys.length; c2++) document.getElementById('pdf-cuenta-' + cuentaKeys[c2]).value = '';
     document.getElementById('propiedadModalTitle').textContent = 'Nueva propiedad';
   }
   document.getElementById('propiedadModal').classList.add('show');
@@ -2159,14 +2202,28 @@ function submitPropiedad() {
   var direccion = document.getElementById('pdf-direccion').value.trim();
   var propietarioId = document.getElementById('pdf-propietario').value;
   if (!direccion) { showToast('⚠️ Escribí la dirección'); return; }
+  var titulares = {
+    expensas: document.getElementById('pdf-tit-expensas').value,
+    emos: document.getElementById('pdf-tit-emos').value,
+    municipales: document.getElementById('pdf-tit-municipales').value,
+    epec: document.getElementById('pdf-tit-epec').value
+  };
+  var cuentas = {
+    emos: document.getElementById('pdf-cuenta-emos').value.trim(),
+    municipales: document.getElementById('pdf-cuenta-municipales').value.trim(),
+    rentas: document.getElementById('pdf-cuenta-rentas').value.trim(),
+    epec: document.getElementById('pdf-cuenta-epec').value.trim()
+  };
   if (editingPropiedadId) {
     var p = DB.alqPropiedades.find(function(x) { return x.id === editingPropiedadId; });
     p.direccion = direccion;
     p.propietarioId = propietarioId;
     p.conceptos = selConceptos.slice();
+    p.titulares = titulares;
+    p.cuentas = cuentas;
     showToast('✅ Propiedad actualizada');
   } else {
-    DB.alqPropiedades.push({ id: uid(), propietarioId: propietarioId, direccion: direccion, conceptos: selConceptos.slice(), saldoArrastrado: {} });
+    DB.alqPropiedades.push({ id: uid(), propietarioId: propietarioId, direccion: direccion, conceptos: selConceptos.slice(), titulares: titulares, cuentas: cuentas, saldoArrastrado: {} });
     showToast('✅ Propiedad agregada');
   }
   saveDB();
@@ -2190,11 +2247,38 @@ function renderPropDetail(id) {
   var valores = DB.alqValoresAlquiler.filter(function(x) { return x.propiedadId === id; }).sort(function(a, b) { return new Date(b.fechaDesde) - new Date(a.fechaDesde); });
   var inq = getInquilinoActual(id);
   var inqHist = DB.alqInquilinos.filter(function(x) { return x.propiedadId === id && x.fechaFin; }).sort(function(a, b) { return new Date(b.fechaFin) - new Date(a.fechaFin); });
-  var conceptLabels = { expensas: 'Expensas', emos: 'EMOS', municipales: 'Municipales', rentas: 'Rentas' };
+  var conceptLabels = { expensas: 'Expensas', emos: 'EMOS', municipales: 'Municipales', epec: 'EPEC', rentas: 'Rentas' };
 
   var html = '';
+  if (prop.notas) html += '<div class="rent-alert">⚠️ ' + prop.notas + '</div>';
   html += '<div class="prop-owner" style="margin-bottom:10px">Propietario: <b style="color:var(--text)">' + (owner ? owner.nombre : '—') + '</b></div>';
   html += '<div class="prop-meta" style="margin-bottom:6px"><div><b>Conceptos activos:</b> ' + (prop.conceptos && prop.conceptos.length ? prop.conceptos.map(function(c) { return conceptLabels[c]; }).join(', ') : 'Solo alquiler') + '</div></div>';
+  if (prop.conceptos && prop.conceptos.length) {
+    var titLbl = { inquilino: 'Inquilino', propietario: 'Propietario' };
+    var titHtml = '';
+    for (var ti = 0; ti < prop.conceptos.length; ti++) {
+      var ck = prop.conceptos[ti];
+      if (ck === 'rentas') continue;
+      var tit = (prop.titulares && prop.titulares[ck]) || 'inquilino';
+      titHtml += '<div>' + conceptLabels[ck] + ': a nombre del <b>' + titLbl[tit] + '</b></div>';
+    }
+    if (titHtml) html += '<div class="prop-meta" style="margin-bottom:6px;flex-direction:column;gap:2px">' + titHtml + '</div>';
+  }
+  if (prop.cuentas && (prop.cuentas.emos || prop.cuentas.municipales || prop.cuentas.rentas || prop.cuentas.epec)) {
+    var cuentaLbl = { emos: 'EMOS', municipales: 'Municipalidad', rentas: 'Rentas', epec: 'EPEC' };
+    var cuentaHtml = '';
+    for (var cu in prop.cuentas) {
+      if (!prop.cuentas[cu]) continue;
+      var portalUrl = PORTAL_URLS[cu];
+      cuentaHtml += '<div class="rentval-item" style="align-items:center">';
+      cuentaHtml += '<span>' + cuentaLbl[cu] + ': <b>' + prop.cuentas[cu] + '</b></span>';
+      cuentaHtml += '<span style="display:flex;gap:6px">';
+      cuentaHtml += '<button class="print-btn" onclick="copiarCuenta(\'' + prop.cuentas[cu].replace(/'/g, "\\'") + '\')">📋 Copiar</button>';
+      if (portalUrl) cuentaHtml += '<button class="print-btn" onclick="window.open(\'' + portalUrl + '\',\'_blank\')">🔗 Abrir sitio</button>';
+      cuentaHtml += '</span></div>';
+    }
+    html += '<div class="section-tag">Números de cuenta</div>' + cuentaHtml;
+  }
 
   html += '<div class="section-tag">Valor de alquiler</div>';
   if (rentUpdateOverdue(id)) html += '<div class="rent-alert">🔴 Pasaron más de 4 meses desde la última actualización</div>';
@@ -2279,6 +2363,7 @@ function submitValorAlquiler() {
 var inquilinoPropId = null;
 function openInquilinoModal(propId) {
   inquilinoPropId = propId;
+  document.getElementById('if-propiedadWrap').style.display = 'none';
   document.getElementById('if-nombre').value = '';
   document.getElementById('if-tel').value = '';
   document.getElementById('if-fechaInicio').value = new Date().toISOString().slice(0, 10);
@@ -2290,11 +2375,40 @@ function openInquilinoModal(propId) {
   document.getElementById('inquilinoModalTitle').textContent = inqActual ? 'Cambiar inquilino' : 'Nuevo inquilino';
   document.getElementById('inquilinoModal').classList.add('show');
 }
+function openInquilinoModalGeneral() {
+  if (!DB.alqPropiedades.length) { showToast('⚠️ Primero cargá una propiedad'); return; }
+  var sel = document.getElementById('if-propiedadSelect');
+  var opts = '';
+  for (var i = 0; i < DB.alqPropiedades.length; i++) {
+    var p = DB.alqPropiedades[i];
+    var owner = DB.alqPropietarios.find(function(x) { return x.id === p.propietarioId; });
+    opts += '<option value="' + p.id + '">' + p.direccion + (owner ? ' — ' + owner.nombre : '') + '</option>';
+  }
+  sel.innerHTML = opts;
+  document.getElementById('if-propiedadWrap').style.display = 'block';
+  inquilinoPropId = DB.alqPropiedades[0].id;
+  document.getElementById('if-nombre').value = '';
+  document.getElementById('if-tel').value = '';
+  document.getElementById('if-fechaInicio').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('if-gNombre').value = '';
+  document.getElementById('if-gDni').value = '';
+  document.getElementById('if-gTel').value = '';
+  document.getElementById('if-gDireccion').value = '';
+  var inqActual = getInquilinoActual(inquilinoPropId);
+  document.getElementById('inquilinoModalTitle').textContent = inqActual ? 'Cambiar inquilino' : 'Nuevo inquilino';
+  document.getElementById('inquilinoModal').classList.add('show');
+}
+function onIfPropiedadChange() {
+  inquilinoPropId = document.getElementById('if-propiedadSelect').value;
+  var inqActual = getInquilinoActual(inquilinoPropId);
+  document.getElementById('inquilinoModalTitle').textContent = inqActual ? 'Cambiar inquilino' : 'Nuevo inquilino';
+}
 function submitInquilino() {
   var nombre = document.getElementById('if-nombre').value.trim();
   var fechaInicio = document.getElementById('if-fechaInicio').value;
   if (!nombre) { showToast('⚠️ Escribí el nombre del inquilino'); return; }
   if (!fechaInicio) { showToast('⚠️ Ingresá la fecha de inicio'); return; }
+  if (!inquilinoPropId) { showToast('⚠️ Elegí una propiedad'); return; }
   var actual = getInquilinoActual(inquilinoPropId);
   if (actual) { actual.fechaFin = fechaInicio; }
   DB.alqInquilinos.push({
@@ -2328,7 +2442,7 @@ function renderPagos() {
   var props = DB.alqPropiedades.filter(function(p) { return getInquilinoActual(p.id); });
   if (!props.length) { list.innerHTML = ''; empty.classList.add('show'); return; }
   empty.classList.remove('show');
-  var conceptLabels = { alquiler: 'Alquiler', expensas: 'Expensas', emos: 'EMOS', municipales: 'Municipales', rentas: 'Rentas' };
+  var conceptLabels = { alquiler: 'Alquiler', expensas: 'Expensas', emos: 'EMOS', municipales: 'Municipales', epec: 'EPEC', rentas: 'Rentas' };
   var html = '';
   for (var i = 0; i < props.length; i++) {
     var prop = props[i];
@@ -2430,7 +2544,7 @@ function verRecibo(propId) {
   var pago = DB.alqPagos.find(function(x) { return x.propiedadId === propId && x.mes === currentPagosMes; });
   if (!prop || !pago) { showToast('⚠️ Todavía no guardaste el pago de este mes'); return; }
   var inq = DB.alqInquilinos.find(function(x) { return x.id === pago.inquilinoId; });
-  var conceptLabels = { alquiler: 'Alquiler', expensas: 'Expensas', emos: 'EMOS', municipales: 'Municipales', rentas: 'Rentas' };
+  var conceptLabels = { alquiler: 'Alquiler', expensas: 'Expensas', emos: 'EMOS', municipales: 'Municipales', epec: 'EPEC', rentas: 'Rentas' };
   var rowsHtml = '', totalPagadoPesos = 0, totalDebePesos = 0;
   for (var k in pago.conceptos) {
     var c = pago.conceptos[k];
@@ -2507,7 +2621,7 @@ function generarLiquidacion(ownerId, mesParam) {
   var mes = mesParam || currentLiqMes;
   var owner = DB.alqPropietarios.find(function(x) { return x.id === ownerId; });
   var misProps = DB.alqPropiedades.filter(function(x) { return x.propietarioId === ownerId; });
-  var conceptLabels = { alquiler: 'Alquiler', expensas: 'Expensas', emos: 'EMOS', municipales: 'Municipales', rentas: 'Rentas' };
+  var conceptLabels = { alquiler: 'Alquiler', expensas: 'Expensas', emos: 'EMOS', municipales: 'Municipales', epec: 'EPEC', rentas: 'Rentas' };
   var rowsHtml = '', totalCobrado = 0, propsConPago = 0;
   for (var j = 0; j < misProps.length; j++) {
     var pago = DB.alqPagos.find(function(x) { return x.propiedadId === misProps[j].id && x.mes === mes; });
@@ -2559,7 +2673,7 @@ function generarLiquidacionPropiedad(propId, mesParam) {
   if (!prop) return;
   var owner = DB.alqPropietarios.find(function(x) { return x.id === prop.propietarioId; });
   var pago = DB.alqPagos.find(function(x) { return x.propiedadId === propId && x.mes === mes; });
-  var conceptLabels = { alquiler: 'Alquiler', expensas: 'Expensas', emos: 'EMOS', municipales: 'Municipales', rentas: 'Rentas' };
+  var conceptLabels = { alquiler: 'Alquiler', expensas: 'Expensas', emos: 'EMOS', municipales: 'Municipales', epec: 'EPEC', rentas: 'Rentas' };
   if (!pago) { showToast('⚠️ No hay pagos cargados para esta propiedad en ' + mesLabel(mes)); return; }
   var inq = DB.alqInquilinos.find(function(x) { return x.id === pago.inquilinoId; });
   var rowsHtml = '', totalCobrado = 0;
@@ -3178,6 +3292,26 @@ function buildAutoAlerts() {
       alerts.push({cls:'warn', title:'Saldo de alquiler pendiente (USD) — ' + prop.direccion, sub: 'USD ' + totalSaldoUsd.toLocaleString('es-AR', {minimumFractionDigits:2}) + ' sin cobrar', time:'Pendiente', tipo:'warn'});
     }
   }
+  var hoy = new Date();
+  if (hoy.getDate() <= 10) {
+    var mesActual = hoy.toISOString().slice(0, 7);
+    var conceptLabelsRec = { expensas: 'Expensas', emos: 'EMOS', municipales: 'Municipales', epec: 'EPEC' };
+    var titLblRec = { inquilino: 'Inquilino', propietario: 'Propietario' };
+    for (var r = 0; r < DB.alqPropiedades.length; r++) {
+      var propR = DB.alqPropiedades[r];
+      var pagoR = DB.alqPagos.find(function(x) { return x.propiedadId === propR.id && x.mes === mesActual; });
+      var conceptosProp = propR.conceptos || [];
+      for (var rc = 0; rc < conceptosProp.length; rc++) {
+        var ckR = conceptosProp[rc];
+        if (ckR === 'rentas' || !conceptLabelsRec[ckR]) continue;
+        var yaCargado = pagoR && pagoR.conceptos && pagoR.conceptos[ckR] && pagoR.conceptos[ckR].monto;
+        if (!yaCargado) {
+          var titR = (propR.titulares && propR.titulares[ckR]) || 'inquilino';
+          alerts.push({cls:'info', title:'Revisar factura de ' + conceptLabelsRec[ckR] + ' — ' + propR.direccion, sub: 'A nombre del ' + titLblRec[titR] + ' · todavía no se cargó este mes', time:'Este mes', tipo:'info'});
+        }
+      }
+    }
+  }
   return alerts;
 }
 
@@ -3263,6 +3397,62 @@ function exportBackup() {
   } catch (e) {
     showToast('⚠️ No se pudo generar la copia de seguridad');
   }
+}
+
+function importarDatosExcel() {
+  if (DB.excelImportDone) {
+    if (!confirm('Esto ya se importó antes. ¿Querés ejecutarlo de nuevo igual? (no debería duplicar, pero revisá después)')) return;
+  } else {
+    if (!confirm('Esto va a cargar automáticamente ~14 propiedades, propietarios e inquilinos detectados en la planilla de liquidación. Después vas a poder revisar y corregir cada una. ¿Continuar?')) return;
+  }
+
+  function getOrCreatePropietario(nombre) {
+    var existing = DB.alqPropietarios.find(function(x) { return x.nombre.toLowerCase() === nombre.toLowerCase(); });
+    if (existing) return existing.id;
+    var id = uid();
+    DB.alqPropietarios.push({ id: id, nombre: nombre, tel: '', comisionTipo: 'ninguna', comisionValor: 0, notas: '' });
+    return id;
+  }
+
+  var datos = [
+    { direccion: 'Dpto Copas I - 2º "B" (San Martín 538)', propietario: 'Bonansea', inquilino: 'Fernández', conceptos: ['expensas','emos','municipales','rentas'], cuentas: { emos: 'C:1 S:1 M:50 P:31 Ph:10', municipales: 'C:1 S:1 M:50 P:31 Ph:10', rentas: 'N 240525526403' }, alquiler: { monto: 300000, fecha: '2025-04-01' }, notas: '' },
+    { direccion: 'Dpto Copas I - 2º "D" (San Martín 538)', propietario: 'Cedido', inquilino: 'Wendel', conceptos: ['emos','municipales','rentas'], cuentas: { emos: 'C:1 S:1 M:50 P:31 Ph:12', municipales: 'C:1 S:1 M:50 P:31 Ph:12', rentas: 'N 240525526381' }, alquiler: null, notas: '⚠️ El Excel marca esta propiedad como "CEDIDO" — revisar si sigue siendo de administración del estudio.' },
+    { direccion: 'Dpto Cielos I - 4º "A" (San Martín 465)', propietario: 'Bonansea', inquilino: 'Mellano', conceptos: ['expensas','emos','municipales','epec','rentas'], cuentas: { emos: 'C:1 S:1 M:60 P:3 Ph:19', municipales: 'C:1 S:1 M:60 P:3 Ph:19', rentas: 'N 240527342971', epec: 'C:5896318 Contr:0101216609 (paga inquilino)' }, alquiler: { monto: 350000, fecha: '2025-12-01' }, notas: '' },
+    { direccion: 'Dpto Cielos I - 4º "B" (San Martín 465)', propietario: 'Bonansea', inquilino: 'Oviedo - Acosta', conceptos: ['expensas','emos','municipales','epec','rentas'], cuentas: { emos: 'C:1 S:1 M:60 P:3 Ph:20', municipales: 'C:1 S:1 M:60 P:3 Ph:20', rentas: 'N 240527342989', epec: 'C:5944082 Contrato:0100644606 (paga inquilino)' }, alquiler: { monto: 550000, fecha: '2026-03-01' }, notas: 'También tiene Ecogas contrato 22116445 (paga inquilino) — no gestionado en la app.' },
+    { direccion: 'Dpto Cielos I - 4º "C" (San Martín 465)', propietario: 'Bonansea', inquilino: 'Barrionuevo', conceptos: ['expensas','emos','municipales','rentas'], cuentas: { emos: 'C:1 S:1 M:60 P:3 Ph:21', municipales: 'C:1 S:1 M:60 P:3 Ph:21', rentas: 'N 240527342997' }, alquiler: { monto: 250000, fecha: '2025-01-01' }, notas: '' },
+    { direccion: 'Dpto Alfa I - 6º "C" (Buenos Aires 662)', propietario: 'Bonansea', inquilino: 'García / Acosta', conceptos: ['expensas','emos','municipales','rentas'], cuentas: { emos: 'C:1 S:1 M:58 P:24 Ph:26', municipales: 'C:1 S:1 M:58 P:24 Ph:26', rentas: 'N 240522467635' }, alquiler: { monto: 300000, fecha: '2025-04-01' }, notas: '' },
+    { direccion: 'Casa Mendoza 927', propietario: 'Bonansea', inquilino: 'Bertero', conceptos: ['emos','municipales','rentas'], cuentas: { emos: 'C:1 S:1 M:78 P:36 Ph:00', municipales: 'C:1 S:1 M:78 P:36 Ph:00', rentas: 'N 240501116328' }, alquiler: { monto: 650000, fecha: '2024-10-01' }, notas: '' },
+    { direccion: 'Galpón Dinkeldein Norte 541', propietario: 'Bonansea', inquilino: 'Grezia', conceptos: ['emos','municipales','rentas'], cuentas: { emos: 'C:5 S:1 M:245 P:22 Ph:00', municipales: 'C:5 S:1 M:245 P:22 Ph:00', rentas: 'N 240540239917' }, alquiler: { monto: 550000, fecha: '2025-01-01' }, notas: '' },
+    { direccion: 'Lote 168 - Santa Catalina', propietario: 'Cedido', inquilino: 'Cappelari', conceptos: [], cuentas: {}, alquiler: null, notas: '⚠️ El Excel dice explícitamente "ESE NO ES NUESTRO" para este lote — revisar si corresponde borrarlo.' },
+    { direccion: 'Lote 227 - Santa Catalina', propietario: 'Bonansea', inquilino: 'Príncipe', conceptos: ['rentas'], cuentas: { rentas: 'N 240542955580' }, alquiler: { monto: 800000, fecha: '2025-11-01' }, notas: '' },
+    { direccion: 'Galpón Estado de Palestina 39 (Santa Rosa 2275)', propietario: 'Bonansea', inquilino: 'Pagés', conceptos: ['emos','municipales','rentas'], cuentas: { emos: 'C:3 S:2 M:344 P:1 Ph:00 (sin agua)', municipales: 'C:3 S:2 M:344 P:1 Ph:00', rentas: 'N 240524795931' }, alquiler: null, notas: 'Valor de alquiler no está claro en el Excel ("precio super puma") — cargar a mano.' },
+    { direccion: 'Quinta Estado de Palestina 2807', propietario: 'Bonansea', inquilino: 'Maldonado', conceptos: [], cuentas: {}, alquiler: null, notas: '⚠️ El Excel marca esta propiedad "EN JUICIO" — sin datos de cuenta ni alquiler. Revisar estado actual.' },
+    { direccion: 'Galpón Estado de Palestina 2865', propietario: 'Bonansea', inquilino: 'Ponti', conceptos: ['emos','municipales','rentas'], cuentas: { emos: 'C:3 S:2 M:359 P:6 Ph:00 (sin agua)', municipales: 'C:3 S:2 M:359 P:6 Ph:00', rentas: 'N 240502553861' }, alquiler: { monto: 550000, fecha: '2025-03-01' }, notas: '' },
+    { direccion: 'Galpón Estado de Palestina 2893', propietario: 'Cedido Pereyra', inquilino: 'Seminare', conceptos: ['emos','municipales','rentas'], cuentas: { emos: 'C:3 S:2 M:359 P:7 Ph:00 (sin agua)', municipales: 'C:3 S:2 M:359 P:7 Ph:00', rentas: 'N 240525538070' }, alquiler: null, notas: '⚠️ El Excel marca el propietario como "CEDIDO PEREYRA" y dice que un período de Rentas "NO SON NUESTROS" — revisar titularidad.' }
+  ];
+
+  var creadas = 0, saltadas = 0;
+  for (var i = 0; i < datos.length; i++) {
+    var d = datos[i];
+    var yaExiste = DB.alqPropiedades.find(function(x) { return x.direccion.toLowerCase() === d.direccion.toLowerCase(); });
+    if (yaExiste) { saltadas++; continue; }
+    var propietarioId = getOrCreatePropietario(d.propietario);
+    var propId = uid();
+    var titularesDefault = { expensas: 'inquilino', emos: 'inquilino', municipales: 'inquilino', epec: 'inquilino' };
+    DB.alqPropiedades.push({ id: propId, propietarioId: propietarioId, direccion: d.direccion, conceptos: d.conceptos, titulares: titularesDefault, cuentas: d.cuentas, notas: d.notas, saldoArrastrado: {} });
+    if (d.inquilino) {
+      DB.alqInquilinos.push({ id: uid(), propiedadId: propId, nombre: d.inquilino, tel: '', fechaInicio: (d.alquiler ? d.alquiler.fecha : new Date().toISOString().slice(0,10)), fechaFin: null, garante: { nombre: '', dni: '', tel: '', direccion: '' } });
+    }
+    if (d.alquiler) {
+      DB.alqValoresAlquiler.push({ id: uid(), propiedadId: propId, monto: d.alquiler.monto, moneda: 'ARS', fechaDesde: d.alquiler.fecha, motivo: 'Carga inicial (importado del Excel)' });
+    }
+    creadas++;
+  }
+  DB.excelImportDone = true;
+  saveDB();
+  renderPropiedades();
+  renderPropietarios();
+  showToast('✅ Importadas ' + creadas + ' propiedades (' + saltadas + ' ya existían)');
 }
 
 function renderEquipo() {
