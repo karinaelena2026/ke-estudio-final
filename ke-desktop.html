@@ -689,6 +689,8 @@ textarea.finput{resize:none;height:70px;line-height:1.5}
           <div class="stat" onclick="goNav('expedientes')"><div class="stat-icon">📁</div><div class="stat-val" id="statExp">0</div><div class="stat-lbl">Expedientes</div></div>
           <div class="stat" onclick="goNav('honorarios')"><div class="stat-icon">💰</div><div class="stat-val" id="statHon">$0</div><div class="stat-lbl">Hon. pendientes</div></div>
           <div class="stat" onclick="goNav('tareas')"><div class="stat-icon">✅</div><div class="stat-val" id="statTareas">0</div><div class="stat-lbl">Tareas pendientes</div></div>
+          <div class="stat" onclick="goNav('alquileres')"><div class="stat-icon">🔑</div><div class="stat-val" id="statAlqSaldo">$0</div><div class="stat-lbl">Saldo alquileres pend.</div></div>
+          <div class="stat" onclick="goNav('gastos')"><div class="stat-icon">💸</div><div class="stat-val" id="statGastosPend">$0</div><div class="stat-lbl">Gastos a reintegrar</div></div>
         </div>
         <div class="divtxt"><span>Tareas finalizadas hoy</span></div>
         <div id="dashTasksDone"></div>
@@ -912,23 +914,6 @@ textarea.finput{resize:none;height:70px;line-height:1.5}
       <div id="contactList"></div>
     </section>
 
-    <!-- PORTAL -->
-    <section class="screen" id="screen-novedades">
-      <div class="eyebrow">Portales · Río Cuarto</div><div class="stitle">Novedades Judiciales</div>
-      <div class="portal-tabs">
-        <div class="ptab on" onclick="filterNov('todas',this)">Todas</div>
-        <div class="ptab" onclick="filterNov('cordoba',this)">⚖️ P.J. Córdoba</div>
-        <div class="ptab" onclick="filterNov('nacion',this)">🏛️ P.J. Nación</div>
-      </div>
-      <button class="add-row-btn" onclick="openNovModal()">➕ Agregar novedad</button>
-      <div id="novList"></div>
-      <div id="novEmpty" class="empty-state">
-        <div class="empty-icon">⚖️</div>
-        <div class="empty-title">Todavía no hay novedades cargadas</div>
-        <div class="empty-sub">Agregalas a mano mientras conectamos el portal real</div>
-      </div>
-    </section>
-
     <!-- ALERTAS -->
     <section class="screen" id="screen-alertas">
       <div class="eyebrow">Sistema</div><div class="stitle">Alertas automáticas</div>
@@ -978,6 +963,11 @@ textarea.finput{resize:none;height:70px;line-height:1.5}
     <section class="screen" id="screen-equipo">
       <div class="eyebrow">Gestión</div><div class="stitle">Mi equipo</div>
       <div id="teamList"></div>
+      <div id="backupSection" style="display:none;margin-top:20px">
+        <div class="section-tag">Respaldo de datos</div>
+        <button class="add-row-btn" onclick="exportBackup()">💾 Descargar copia de seguridad</button>
+        <div class="empty-sub" style="text-align:left;margin-top:6px">Guarda un archivo con todos los datos del estudio (clientes, expedientes, alquileres, gastos, etc.) por si algo falla. Conviene hacerlo cada tanto.</div>
+      </div>
     </section>
 
   </main>
@@ -1210,6 +1200,16 @@ textarea.finput{resize:none;height:70px;line-height:1.5}
     </div>
   </div>
 
+  <!-- HISTORIAL DE LIQUIDACIONES -->
+  <div class="overlay" id="liqHistModal">
+    <div class="modal" style="max-height:85vh;display:flex;flex-direction:column">
+      <div class="mhandle"></div>
+      <div class="mtitle" id="liqHistTitle" style="margin-bottom:8px">Historial</div>
+      <div style="overflow-y:auto;flex:1" id="liqHistBody"></div>
+      <button class="mcancel" onclick="closeModal('liqHistModal')" style="margin-top:8px">Cerrar</button>
+    </div>
+  </div>
+
   <!-- NUEVO GASTO DE OFICINA -->
   <div class="overlay" id="gastoOficinaModal">
     <div class="modal">
@@ -1246,29 +1246,6 @@ textarea.finput{resize:none;height:70px;line-height:1.5}
       </select>
       <button class="msubmit" onclick="submitGastoCliente()">✅ Guardar gasto</button>
       <button class="mcancel" onclick="closeModal('gastoClienteModal')">Cancelar</button>
-    </div>
-  </div>
-
-  <!-- NUEVA NOVEDAD MODAL -->
-  <div class="overlay" id="novModal">
-    <div class="modal">
-      <div class="mhandle"></div>
-      <div class="mtitle" id="novModalTitle">Nueva novedad judicial</div>
-      <span class="flabel">Expediente *</span>
-      <input class="finput" id="nf-exp" placeholder="Ej: García c/ Municipalidad">
-      <span class="flabel">Tipo de movimiento</span>
-      <input class="finput" id="nf-tipo" placeholder="Ej: Providencia de trámite">
-      <span class="flabel">Juzgado</span>
-      <input class="finput" id="nf-juzgado" placeholder="Ej: Civil Nº 3 · Río Cuarto">
-      <span class="flabel">Portal</span>
-      <select class="finput" id="nf-portal">
-        <option value="cordoba">P.J. Córdoba</option>
-        <option value="nacion">P.J. Nación</option>
-      </select>
-      <span class="flabel">Texto / detalle (opcional)</span>
-      <textarea class="finput" id="nf-texto" placeholder="Extracto de la resolución..."></textarea>
-      <button class="msubmit" onclick="submitNov()">✅ Guardar novedad</button>
-      <button class="mcancel" onclick="closeModal('novModal')">Cancelar</button>
     </div>
   </div>
 
@@ -1352,7 +1329,6 @@ textarea.finput{resize:none;height:70px;line-height:1.5}
   </div>
   <div class="np-list">
     <div class="notif unread" onclick="closeNotif();goNav('tareas')"><div class="notif-icon">✅</div><div class="notif-body"><div class="notif-title">Josefina finalizó una tarea</div><div class="notif-sub">"Cargar expediente Torres" — completada</div><div class="notif-time">Hace 5 minutos</div></div></div>
-    <div class="notif unread" onclick="closeNotif();goNav('novedades')"><div class="notif-icon">⚖️</div><div class="notif-body"><div class="notif-title">Nueva novedad judicial</div><div class="notif-sub">García c/ Municipalidad — Providencia · Juzgado Civil Nº 3 · Río Cuarto</div><div class="notif-time">Hace 23 minutos</div></div></div>
     <div class="notif unread" onclick="closeNotif();goNav('alertas')"><div class="notif-icon">🔴</div><div class="notif-body"><div class="notif-title">Vencimiento crítico HOY</div><div class="notif-sub">Exp. 4521/2024 — Presentar escrito antes de las 12:00 hs</div><div class="notif-time">Hace 1 hora</div></div></div>
     <div class="notif unread" onclick="closeNotif();goNav('chat')"><div class="notif-icon">💬</div><div class="notif-body"><div class="notif-title">Nuevo mensaje de Mili</div><div class="notif-sub">¿El convenio Fernández va con firma digital?</div><div class="notif-time">Hace 2 horas</div></div></div>
     <div class="notif" onclick="closeNotif();goNav('honorarios')"><div class="notif-icon">💰</div><div class="notif-body"><div class="notif-title">Honorario vencido — López, Ana</div><div class="notif-sub">$85.000 sin cobrar desde el 12/06/2026</div><div class="notif-time">Hace 3 horas</div></div></div>
@@ -1412,7 +1388,6 @@ var NAV_ADMIN = [
   {id:'tareas',icon:'✅',lbl:'Tareas'},
   {id:'documentos',icon:'📂',lbl:'Docs'},
   {id:'chat',icon:'💬',lbl:'Chat'},
-  {id:'novedades',icon:'⚖️',lbl:'Portal'},
   {id:'alertas',icon:'🔔',lbl:'Alertas'},
   {id:'informes',icon:'📊',lbl:'Informes'},
   {id:'equipo',icon:'👥',lbl:'Equipo'}
@@ -1510,7 +1485,7 @@ function loadLocalDB() {
     var raw = localStorage.getItem(DB_KEY);
     if (raw) return JSON.parse(raw);
   } catch (e) {}
-  return { clientes: [], expedientes: [], honorarios: [], tareas: [], novedades: [], docs: [], eventos: [], pizarra: {texto:'', fecha:''} };
+  return { clientes: [], expedientes: [], honorarios: [], tareas: [], docs: [], eventos: [], pizarra: {texto:'', fecha:''} };
 }
 
 function saveLocalDB() {
@@ -1587,7 +1562,6 @@ function initCloudSync() {
           DB.expedientes = cloudData.expedientes || [];
           DB.honorarios = cloudData.honorarios || [];
           DB.tareas = cloudData.tareas || [];
-          DB.novedades = cloudData.novedades || [];
           DB.eventos = cloudData.eventos || [];
           DB.docs = cloudData.docs || [];
           DB.pizarra = cloudData.pizarra || {texto:'', fecha:''};
@@ -2402,18 +2376,20 @@ function renderLiq() {
     if (liqGuardada) html += '<span class="liq-badge' + (liqGuardada.firmada ? '' : ' pend') + '">' + (liqGuardada.firmada ? '✓ Firmada' : 'Pendiente de firma') + '</span>';
     html += '<div class="item-actions" style="margin-top:10px">';
     html += '<div class="act-btn" style="border-color:var(--rent);color:var(--rent)" onclick="generarLiquidacion(\'' + owner.id + '\')">🧾 Generar / imprimir</div>';
+    html += '<div class="act-btn" onclick="verHistorialLiq(\'' + owner.id + '\')">📜 Historial</div>';
     if (liqGuardada && !liqGuardada.firmada) html += '<div class="act-btn" onclick="marcarFirmada(\'' + owner.id + '\')">✅ Marcar firmada</div>';
     html += '</div></div>';
   }
   list.innerHTML = html;
 }
-function generarLiquidacion(ownerId) {
+function generarLiquidacion(ownerId, mesParam) {
+  var mes = mesParam || currentLiqMes;
   var owner = DB.alqPropietarios.find(function(x) { return x.id === ownerId; });
   var misProps = DB.alqPropiedades.filter(function(x) { return x.propietarioId === ownerId; });
   var conceptLabels = { alquiler: 'Alquiler', expensas: 'Expensas', emos: 'EMOS', municipales: 'Municipales', rentas: 'Rentas' };
   var rowsHtml = '', totalCobrado = 0, propsConPago = 0;
   for (var j = 0; j < misProps.length; j++) {
-    var pago = DB.alqPagos.find(function(x) { return x.propiedadId === misProps[j].id && x.mes === currentLiqMes; });
+    var pago = DB.alqPagos.find(function(x) { return x.propiedadId === misProps[j].id && x.mes === mes; });
     if (!pago) continue;
     propsConPago++;
     var inq = DB.alqInquilinos.find(function(x) { return x.id === pago.inquilinoId; });
@@ -2428,8 +2404,8 @@ function generarLiquidacion(ownerId) {
   else if (owner.comisionTipo === 'fijo') comision = owner.comisionValor * propsConPago;
   var neto = totalCobrado - comision;
 
-  var existente = DB.alqLiquidaciones.find(function(x) { return x.clienteId === ownerId && x.mes === currentLiqMes; });
-  if (!existente) { DB.alqLiquidaciones.push({ id: uid(), clienteId: ownerId, mes: currentLiqMes, totalCobrado: totalCobrado, comision: comision, neto: neto, firmada: false, fecha: new Date().toISOString() }); }
+  var existente = DB.alqLiquidaciones.find(function(x) { return x.clienteId === ownerId && x.mes === mes; });
+  if (!existente) { DB.alqLiquidaciones.push({ id: uid(), clienteId: ownerId, mes: mes, totalCobrado: totalCobrado, comision: comision, neto: neto, firmada: false, fecha: new Date().toISOString() }); }
   else { existente.totalCobrado = totalCobrado; existente.comision = comision; existente.neto = neto; }
   saveDB();
   renderLiq();
@@ -2442,7 +2418,7 @@ function generarLiquidacion(ownerId) {
     '.firma{margin-top:60px;display:flex;justify-content:space-between}.firma div{width:45%;text-align:center;border-top:1px solid #333;padding-top:6px;font-size:12px}' +
     '</style></head><body>' +
     '<h1>Karina Elena Estudio Jurídico — Liquidación de alquileres</h1>' +
-    '<h2>' + mesLabel(currentLiqMes) + ' · Propietario: ' + owner.nombre + '</h2>' +
+    '<h2>' + mesLabel(mes) + ' · Propietario: ' + owner.nombre + '</h2>' +
     '<table><thead><tr><th>Propiedad</th><th>Inquilino</th><th>Concepto</th><th>Cobrado</th></tr></thead><tbody>' + rowsHtml + '</tbody></table>' +
     '<div class="tot">Total cobrado: ' + fmtMoney(totalCobrado) + '</div>' +
     '<div class="tot">Comisión administración: ' + fmtMoney(comision) + '</div>' +
@@ -2455,9 +2431,38 @@ function generarLiquidacion(ownerId) {
   w.focus();
   setTimeout(function() { w.print(); }, 300);
 }
-function marcarFirmada(ownerId) {
-  var liq = DB.alqLiquidaciones.find(function(x) { return x.clienteId === ownerId && x.mes === currentLiqMes; });
-  if (liq) { liq.firmada = true; saveDB(); renderLiq(); showToast('✅ Liquidación marcada como firmada'); }
+function marcarFirmada(ownerId, mesParam) {
+  var mes = mesParam || currentLiqMes;
+  var liq = DB.alqLiquidaciones.find(function(x) { return x.clienteId === ownerId && x.mes === mes; });
+  if (liq) { liq.firmada = true; saveDB(); renderLiq(); if (document.getElementById('liqHistModal').classList.contains('show')) renderLiqHist(ownerId); showToast('✅ Liquidación marcada como firmada'); }
+}
+
+function verHistorialLiq(ownerId) {
+  document.getElementById('liqHistModal').classList.add('show');
+  renderLiqHist(ownerId);
+}
+function renderLiqHist(ownerId) {
+  var owner = DB.alqPropietarios.find(function(x) { return x.id === ownerId; });
+  var liqs = DB.alqLiquidaciones.filter(function(x) { return x.clienteId === ownerId; }).sort(function(a, b) { return b.mes.localeCompare(a.mes); });
+  document.getElementById('liqHistTitle').textContent = 'Historial · ' + (owner ? owner.nombre : '');
+  var html = '';
+  if (!liqs.length) {
+    html = '<div class="empty-state-sm show">Todavía no se generó ninguna liquidación para este propietario</div>';
+  } else {
+    for (var i = 0; i < liqs.length; i++) {
+      var l = liqs[i];
+      html += '<div class="liq-card">';
+      html += '<div class="owner-name">' + mesLabel(l.mes) + '</div>';
+      html += '<div class="liq-total">' + fmtMoney(l.neto) + '</div>';
+      html += '<div class="owner-sub">Cobrado: ' + fmtMoney(l.totalCobrado) + ' — Comisión: ' + fmtMoney(l.comision) + '</div>';
+      html += '<span class="liq-badge' + (l.firmada ? '' : ' pend') + '">' + (l.firmada ? '✓ Firmada' : 'Pendiente de firma') + '</span>';
+      html += '<div class="item-actions" style="margin-top:10px">';
+      html += '<div class="act-btn" style="border-color:var(--rent);color:var(--rent)" onclick="generarLiquidacion(\'' + ownerId + '\',\'' + l.mes + '\')">🖨️ Reimprimir</div>';
+      if (!l.firmada) html += '<div class="act-btn" onclick="marcarFirmada(\'' + ownerId + '\',\'' + l.mes + '\')">✅ Marcar firmada</div>';
+      html += '</div></div>';
+    }
+  }
+  document.getElementById('liqHistBody').innerHTML = html;
 }
 
 // ══════════════════════════ GASTOS ══════════════════════════
@@ -2724,94 +2729,6 @@ function filterTaskEstado(estado, btn) {
 }
 
 // ── RENDER: NOVEDADES ──
-function renderNovedades() {
-  var list = document.getElementById('novList');
-  var empty = document.getElementById('novEmpty');
-  if (!list) return;
-  if (!DB.novedades.length) {
-    list.innerHTML = '';
-    empty.classList.add('show');
-    return;
-  }
-  empty.classList.remove('show');
-  var html = '';
-  for (var i = 0; i < DB.novedades.length; i++) {
-    var n = DB.novedades[i];
-    var badgeClass = n.portal === 'cordoba' ? 'badge-blue' : 'badge-gold';
-    var badgeLabel = n.portal === 'cordoba' ? 'Córdoba' : 'Nación';
-    var fechaLbl = new Date(n.fecha).toLocaleDateString('es-AR') + ' ' + new Date(n.fecha).toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
-    html += '<div class="nov-card' + (n.vista?' vista':' nueva') + '" data-portal="' + n.portal + '">';
-    html += '<div class="nov-hdr"><div><div class="nov-exp">' + n.exp + '</div><div class="nov-tipo">📋 ' + (n.tipo||'Movimiento') + '</div><div class="nov-juz">' + (n.juzgado||'—') + '</div></div><div class="badge ' + badgeClass + '">' + badgeLabel + '</div></div>';
-    if (n.texto) html += '<div class="nov-txt">"' + n.texto + '"</div>';
-    html += '<div class="nov-foot"><span class="nov-time">⏱ ' + fechaLbl + (n.vista?' · Vista':'') + '</span><div class="nov-btns">';
-    if (!n.vista) html += '<div class="nov-btn" onclick="marcarVistaDB(\'' + n.id + '\',this)">✓ Vista</div>';
-    html += '<button class="nov-wa" onclick="waJud(\'' + n.exp.replace(/'/g,"\\'") + '\',\'' + (n.tipo||'').replace(/'/g,"\\'") + '\',\'' + (n.juzgado||'').replace(/'/g,"\\'") + '\',\'' + fechaLbl + '\')">📱 WA</button>';
-    html += '</div></div>';
-    html += '<div class="item-actions"><div class="act-btn" onclick="openNovModal(\'' + n.id + '\')">✏️ Editar</div><div class="act-btn danger" onclick="askDelete(\'novedades\',\'' + n.id + '\',\'' + n.exp.replace(/'/g,"\\'") + '\')">🗑️ Borrar</div></div>';
-    html += '</div>';
-  }
-  list.innerHTML = html;
-}
-
-var editingNovId = null;
-
-function openNovModal(editId) {
-  editingNovId = editId || null;
-  if (editId) {
-    var n = DB.novedades.find(function(x){return x.id===editId;});
-    document.getElementById('nf-exp').value = n.exp;
-    document.getElementById('nf-tipo').value = n.tipo || '';
-    document.getElementById('nf-juzgado').value = n.juzgado || '';
-    document.getElementById('nf-portal').value = n.portal;
-    document.getElementById('nf-texto').value = n.texto || '';
-    document.getElementById('novModalTitle').textContent = 'Editar novedad';
-  } else {
-    document.getElementById('nf-exp').value = '';
-    document.getElementById('nf-tipo').value = '';
-    document.getElementById('nf-juzgado').value = '';
-    document.getElementById('nf-texto').value = '';
-    document.getElementById('novModalTitle').textContent = 'Nueva novedad judicial';
-  }
-  document.getElementById('novModal').classList.add('show');
-}
-
-function submitNov() {
-  var exp = document.getElementById('nf-exp').value.trim();
-  if (!exp) { showToast('⚠️ Escribí el expediente'); return; }
-  if (editingNovId) {
-    var n = DB.novedades.find(function(x){return x.id===editingNovId;});
-    n.exp = exp;
-    n.tipo = document.getElementById('nf-tipo').value.trim();
-    n.juzgado = document.getElementById('nf-juzgado').value.trim();
-    n.portal = document.getElementById('nf-portal').value;
-    n.texto = document.getElementById('nf-texto').value.trim();
-    showToast('✅ Novedad actualizada');
-  } else {
-    var nn = {
-      id: uid(),
-      exp: exp,
-      tipo: document.getElementById('nf-tipo').value.trim(),
-      juzgado: document.getElementById('nf-juzgado').value.trim(),
-      portal: document.getElementById('nf-portal').value,
-      texto: document.getElementById('nf-texto').value.trim(),
-      fecha: new Date().toISOString(),
-      vista: false
-    };
-    DB.novedades.push(nn);
-    showToast('✅ Novedad agregada');
-  }
-  saveDB();
-  closeModal('novModal');
-  renderNovedades();
-}
-
-function marcarVistaDB(id, el) {
-  for (var i = 0; i < DB.novedades.length; i++) {
-    if (DB.novedades[i].id === id) { DB.novedades[i].vista = true; break; }
-  }
-  saveDB();
-  renderNovedades();
-}
 
 // ── CALENDARIO ──
 var calViewYear, calViewMonth; // 0-indexed month
@@ -2982,6 +2899,23 @@ function renderDashboard() {
     }
     sh.textContent = fmtMoney(pend);
   }
+  var stAlq = document.getElementById('statAlqSaldo');
+  if (stAlq) {
+    var saldoAlq = 0;
+    for (var ia = 0; ia < DB.alqPropiedades.length; ia++) {
+      var sa = DB.alqPropiedades[ia].saldoArrastrado || {};
+      for (var k in sa) saldoAlq += Number(sa[k]) || 0;
+    }
+    stAlq.textContent = fmtMoney(saldoAlq);
+  }
+  var stGas = document.getElementById('statGastosPend');
+  if (stGas) {
+    var gasPend = 0;
+    for (var ig = 0; ig < DB.gastosClientes.length; ig++) {
+      if (DB.gastosClientes[ig].estado === 'pendiente') gasPend += Number(DB.gastosClientes[ig].monto);
+    }
+    stGas.textContent = fmtMoney(gasPend);
+  }
 
   // Alerts: vencimientos próximos en expedientes y honorarios
   var alertsEl = document.getElementById('dashAlerts');
@@ -3046,6 +2980,18 @@ function buildAutoAlerts() {
   for (var k = 0; k < DB.tareas.length; k++) {
     var t = DB.tareas[k];
     if (t.prioridad === 'alta' && t.estado === 'sinver') alerts.push({cls:'danger', title:'Tarea urgente sin ver — ' + USERS[t.asignado].name, sub: '"' + t.titulo + '"', time:'Urgente', tipo:'crit'});
+  }
+  for (var m = 0; m < DB.alqPropiedades.length; m++) {
+    var prop = DB.alqPropiedades[m];
+    if (rentUpdateOverdue(prop.id)) {
+      alerts.push({cls:'warn', title:'Alquiler sin actualizar hace +4 meses — ' + prop.direccion, sub:'Revisar valor de alquiler', time:'Vencido', tipo:'warn'});
+    }
+    var saldo = prop.saldoArrastrado || {};
+    var totalSaldo = 0;
+    for (var sk in saldo) totalSaldo += Number(saldo[sk]) || 0;
+    if (totalSaldo > 0) {
+      alerts.push({cls:'warn', title:'Saldo de alquiler pendiente — ' + prop.direccion, sub: fmtMoney(totalSaldo) + ' sin cobrar', time:'Pendiente', tipo:'warn'});
+    }
   }
   return alerts;
 }
@@ -3115,9 +3061,30 @@ function renderInformes() {
 }
 
 // ── RENDER: EQUIPO ──
+function exportBackup() {
+  try {
+    var data = JSON.stringify(DB, null, 2);
+    var blob = new Blob([data], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    var fecha = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = 'backup-ke-estudio-' + fecha + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('💾 Copia de seguridad descargada');
+  } catch (e) {
+    showToast('⚠️ No se pudo generar la copia de seguridad');
+  }
+}
+
 function renderEquipo() {
   var el = document.getElementById('teamList');
   if (!el) return;
+  var backupSec = document.getElementById('backupSection');
+  if (backupSec) backupSec.style.display = (currentUser === 'karina') ? 'block' : 'none';
   var emps = ['yani','mili','josefina'];
   var html = '';
   for (var i=0;i<emps.length;i++) {
@@ -3433,7 +3400,6 @@ function renderAll() {
   renderGastosOficina();
   renderGastosClientes();
   renderTareas();
-  renderNovedades();
   renderCalendar();
   renderDashboard();
   renderAlertasScreen();
@@ -3474,7 +3440,6 @@ function confirmDelete() {
   else if (col === 'expedientes') { renderExpedientes(); renderInformes(); }
   else if (col === 'honorarios') { renderHonorarios(); renderInformes(); }
   else if (col === 'tareas') { renderTareas(); renderInformes(); renderEquipo(); }
-  else if (col === 'novedades') renderNovedades();
   else if (col === 'eventos') renderCalendar();
   else if (col === 'alqPropietarios') renderPropietarios();
   else if (col === 'alqPropiedades') {
@@ -3750,26 +3715,6 @@ function attachFile(input, zone) {
   }
   showToast('📎 ' + files.length + ' archivo(s) adjuntado(s)');
   input.value = '';
-}
-
-function filterNov(portal, btn) {
-  var cards = document.querySelectorAll('#screen-novedades .nov-card');
-  for (var i = 0; i < cards.length; i++) {
-    cards[i].style.display = (portal === 'todas' || cards[i].dataset.portal === portal) ? 'block' : 'none';
-  }
-  var tabs = document.querySelectorAll('#screen-novedades .ptab');
-  for (var j = 0; j < tabs.length; j++) tabs[j].classList.remove('on');
-  if (btn) btn.classList.add('on');
-}
-
-function marcarVista(btn) {
-  var card = btn.closest('.nov-card');
-  card.classList.remove('nueva');
-  card.classList.add('vista');
-  btn.textContent = '✓ Vista';
-  btn.style.color = 'var(--success)';
-  btn.style.borderColor = 'var(--success)';
-  btn.onclick = null;
 }
 
 function filterAlertas(tipo, btn) {
@@ -4081,11 +4026,6 @@ function waHon(cliente, monto, concepto, venc, estado) {
   window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
 }
 
-function waJud(exp, tipo, juz, hora) {
-  var d = new Date().toLocaleDateString('es-AR');
-  var msg = '━━━━━━━━━━━━━━━━━━\n🏛️ *KARINA ELENA ESTUDIO JURÍDICO*\n⚖️ *NOVEDAD JUDICIAL*\n━━━━━━━━━━━━━━━━━━\n\n📁 *Expediente:* ' + exp + '\n📋 *Movimiento:* ' + tipo + '\n🏛️ *Juzgado:* ' + juz + '\n⏱️ *Detectado:* ' + hora + '\n📆 *Notificado:* ' + d + '\n━━━━━━━━━━━━━━━━━━\n📍 Estudio · Río Cuarto, Córdoba';
-  window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
-}
 </script>
 <script>
 // Show iOS install banner
