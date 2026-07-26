@@ -833,6 +833,12 @@ textarea.finput{resize:none;height:70px;line-height:1.5}
         <div class="fpill" onclick="filterTasks('josefina',this)">Josefina</div>
         <div class="fpill" onclick="filterTasks('karina',this)">Karina</div>
       </div>
+      <div class="filter-bar" id="tareasEstadoFilter">
+        <div class="fpill" onclick="filterTaskEstado('pendientes',this)">⏺ Pendientes</div>
+        <div class="fpill" onclick="filterTaskEstado('proceso',this)">🔄 En proceso</div>
+        <div class="fpill" onclick="filterTaskEstado('final',this)">✅ Finalizadas</div>
+        <div class="fpill on" onclick="filterTaskEstado('todas',this)">Todas</div>
+      </div>
       <div id="taskList"></div>
       <div id="taskEmpty" class="empty-state">
         <div class="empty-icon">✅</div>
@@ -2616,6 +2622,13 @@ function renderTareas() {
   } else if (currentTaskFilter && currentTaskFilter !== 'todas') {
     visible = DB.tareas.filter(function(t) { return t.asignado === currentTaskFilter; });
   }
+  if (currentTaskEstadoFilter === 'pendientes') {
+    visible = visible.filter(function(t) { return t.estado === 'sinver'; });
+  } else if (currentTaskEstadoFilter === 'proceso') {
+    visible = visible.filter(function(t) { return t.estado === 'proceso'; });
+  } else if (currentTaskEstadoFilter === 'final') {
+    visible = visible.filter(function(t) { return t.estado === 'final'; });
+  }
   if (!visible.length) {
     list.innerHTML = '';
     empty.classList.add('show');
@@ -2650,6 +2663,16 @@ function renderTareas() {
 }
 
 var currentTaskFilter = 'todas';
+var currentTaskEstadoFilter = 'todas';
+function filterTaskEstado(estado, btn) {
+  currentTaskEstadoFilter = estado;
+  if (btn) {
+    var pills = document.querySelectorAll('#tareasEstadoFilter .fpill');
+    for (var j = 0; j < pills.length; j++) pills[j].classList.remove('on');
+    btn.classList.add('on');
+  }
+  renderTareas();
+}
 
 // ── RENDER: NOVEDADES ──
 function renderNovedades() {
