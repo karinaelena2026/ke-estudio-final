@@ -17,6 +17,7 @@
 <link rel="apple-touch-icon" sizes="180x180" href="icon-192.png">
 <link rel="apple-touch-icon" sizes="167x167" href="icon-192.png">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -636,7 +637,7 @@ textarea.finput{resize:none;height:70px;line-height:1.5}
           <div class="pizarra-title">📋 Pizarra del día</div>
           <div class="pizarra-edit-btn" id="pizarraEditBtn" onclick="togglePizarra()">✏️ Editar</div>
         </div>
-        <div class="pizarra-text" id="pizarraText"><span class="empty">Karina aún no dejó instrucciones para hoy...</span></div>
+        <div class="pizarra-text" id="pizarraText"><span class="empty">Todavía no dejaron instrucciones para hoy...</span></div>
         <textarea class="pizarra-textarea" id="pizarraInput" placeholder="Escribí las tareas e instrucciones del día para el equipo..." style="display:none"></textarea>
         <div class="pizarra-footer">
           <div class="pizarra-date" id="pizarraDate"></div>
@@ -669,6 +670,10 @@ textarea.finput{resize:none;height:70px;line-height:1.5}
     <section class="screen" id="screen-clientes">
       <div class="eyebrow">Gestión</div><div class="stitle">Clientes</div>
       <div class="search-bar"><span style="color:var(--text3);font-size:12px">🔍</span><input type="text" placeholder="Buscar cliente..." oninput="filterClients(this.value)"></div>
+      <div class="filter-bar">
+        <div class="fpill on" onclick="filterClientesPendiente('todos',this)">Todos</div>
+        <div class="fpill" onclick="filterClientesPendiente('pendiente',this)">🟡 Con pendiente inicial</div>
+      </div>
       <button class="add-row-btn" onclick="openClientModal()">➕ Agregar cliente</button>
       <div id="clientList"></div>
       <div id="clientEmpty" class="empty-state">
@@ -689,6 +694,7 @@ textarea.finput{resize:none;height:70px;line-height:1.5}
         <div class="fpill" onclick="filterExp('civil',this)">⚖️ Civil</div>
         <div class="fpill" onclick="filterExp('laboral',this)">👷 Laboral</div>
         <div class="fpill" onclick="filterExp('familia',this)">👨‍👩‍👧 Familia</div>
+        <div class="fpill" onclick="filterExp('dormido',this)">😴 Dormidos</div>
       </div>
       <button class="add-row-btn" onclick="openExpModal()">➕ Agregar expediente</button>
       <div id="expList"></div>
@@ -741,6 +747,7 @@ textarea.finput{resize:none;height:70px;line-height:1.5}
         <div class="fpill" onclick="alqTab('inquilinos',this)">🧑‍🤝‍🧑 Inquilinos</div>
         <div class="fpill" onclick="alqTab('pagos',this)">💵 Pagos del mes</div>
         <div class="fpill" onclick="alqTab('liquidaciones',this)">🧾 Liquidaciones</div>
+        <div class="fpill" onclick="alqTab('solicitudes',this)">📋 Solicitudes <span id="solicitudesBadge" style="display:none"></span></div>
       </div>
 
       <div class="alq-sub" id="alqSub-propietarios">
@@ -799,6 +806,16 @@ textarea.finput{resize:none;height:70px;line-height:1.5}
           <div class="empty-sub">Agregá propietarios y propiedades para generar liquidaciones</div>
         </div>
       </div>
+
+      <div class="alq-sub" id="alqSub-solicitudes" style="display:none">
+        <div class="empty-sub" style="text-align:left;margin-bottom:10px">Acá caen los envíos del formulario de contrato de locación. Revisá los datos y cargalos como inquilino en la propiedad correspondiente.</div>
+        <div id="solicitudList"></div>
+        <div id="solicitudEmpty" class="empty-state">
+          <div class="empty-icon">📋</div>
+          <div class="empty-title">No hay solicitudes nuevas</div>
+          <div class="empty-sub">Van a aparecer acá cuando alguien complete el formulario de contrato</div>
+        </div>
+      </div>
     </section>
 
     <!-- GASTOS -->
@@ -842,6 +859,32 @@ textarea.finput{resize:none;height:70px;line-height:1.5}
       </div>
     </section>
 
+    <!-- CÉDULAS -->
+    <section class="screen" id="screen-cedulas">
+      <div class="eyebrow">Organización</div><div class="stitle">Cédulas de notificación</div>
+      <div class="search-bar"><span style="color:var(--text3);font-size:12px">🔍</span><input type="text" placeholder="Buscar por carátula o destinatario..." oninput="searchCedulas(this.value)"></div>
+      <button class="add-row-btn" onclick="openCedulaModal()">➕ Agregar cédula</button>
+      <div id="cedulaList"></div>
+      <div id="cedulaEmpty" class="empty-state">
+        <div class="empty-icon">📨</div>
+        <div class="empty-title">Todavía no hay cédulas cargadas</div>
+        <div class="empty-sub">Tocá "Agregar cédula" para cargar la primera</div>
+      </div>
+    </section>
+
+    <!-- TELÉFONOS -->
+    <section class="screen" id="screen-telefonos">
+      <div class="eyebrow">Organización</div><div class="stitle">Teléfonos de juzgados</div>
+      <div class="search-bar"><span style="color:var(--text3);font-size:12px">🔍</span><input type="text" placeholder="Buscar juzgado u organismo..." oninput="searchTelefonos(this.value)"></div>
+      <button class="add-row-btn" onclick="openTelefonoModal()">➕ Agregar contacto</button>
+      <div id="telefonoList"></div>
+      <div id="telefonoEmpty" class="empty-state">
+        <div class="empty-icon">📞</div>
+        <div class="empty-title">Todavía no hay contactos cargados</div>
+        <div class="empty-sub">Tocá "Agregar contacto" para cargar el primero</div>
+      </div>
+    </section>
+
     <!-- TAREAS -->
     <section class="screen" id="screen-tareas">
       <div class="eyebrow">Organización</div>
@@ -859,6 +902,7 @@ textarea.finput{resize:none;height:70px;line-height:1.5}
         <div class="fpill" onclick="filterTaskEstado('final',this)">✅ Finalizadas</div>
         <div class="fpill on" onclick="filterTaskEstado('todas',this)">Todas</div>
       </div>
+      <button class="add-row-btn" style="border-color:var(--danger);color:var(--danger)" onclick="limpiarTareasFinalizadas()">🗑️ Limpiar tareas finalizadas</button>
       <div id="taskList"></div>
       <div id="taskEmpty" class="empty-state">
         <div class="empty-icon">✅</div>
@@ -1007,6 +1051,9 @@ textarea.finput{resize:none;height:70px;line-height:1.5}
       <input class="finput" id="cf-tel" placeholder="Ej: 358-4123456" type="tel">
       <span class="flabel">Notas</span>
       <textarea class="finput" id="cf-notas" placeholder="Información adicional del cliente..."></textarea>
+      <span class="flabel">¿Qué falta hacer para arrancar? (opcional)</span>
+      <input class="finput" id="cf-pendiente" placeholder="Ej: Presentar demanda, Enviar CD...">
+      <div class="empty-sub" style="text-align:left;margin-bottom:8px">Se muestra como pendiente en la lista de clientes hasta que lo marques como resuelto.</div>
       <button class="msubmit" onclick="submitClient()">✅ Guardar cliente</button>
       <button class="mcancel" onclick="closeModal('clientModal')">Cancelar</button>
     </div>
@@ -1037,6 +1084,14 @@ textarea.finput{resize:none;height:70px;line-height:1.5}
       </select>
       <span class="flabel">Fecha relevante (vencimiento/audiencia)</span>
       <input class="finput" id="ef-fecha" type="date">
+      <span class="flabel">Fecha de última actuación</span>
+      <input class="finput" id="ef-ultimaActuacion" type="date">
+      <span class="flabel">Plazo de perención de este expediente</span>
+      <select class="finput" id="ef-plazoPerencion">
+        <option value="5">5 meses (genérico, para estar atenta)</option>
+        <option value="6">6 meses</option>
+        <option value="12">1 año</option>
+      </select>
       <button class="msubmit" onclick="submitExp()">✅ Guardar expediente</button>
       <button class="mcancel" onclick="closeModal('expModal')">Cancelar</button>
     </div>
@@ -1083,10 +1138,13 @@ textarea.finput{resize:none;height:70px;line-height:1.5}
       </select>
       <div id="pf-comisionValorWrap" style="display:none">
         <span class="flabel" id="pf-comisionValorLbl">Valor</span>
-        <input class="finput" id="pf-comisionValor" type="number" placeholder="Ej: 10">
+        <input class="finput" id="pf-comisionValor" type="text" inputmode="decimal" placeholder="Ej: 10">
       </div>
       <span class="flabel">Notas</span>
       <textarea class="finput" id="pf-notas" placeholder="Información adicional..."></textarea>
+      <span class="flabel">Encabezado para recibos y liquidaciones (opcional)</span>
+      <input class="finput" id="pf-encabezado" placeholder="Dejar vacío = 'Karina Elena Estudio Jurídico'">
+      <div class="empty-sub" style="text-align:left;margin-bottom:8px">Si lo completás, los recibos y liquidaciones de las propiedades de este propietario van a usar este texto en vez de "Karina Elena Estudio Jurídico". Ej: ADMINISTRACIÓN DE PROPIEDADES — SUCESIÓN ALBERTO ALFREDO BONANSEA</div>
       <button class="msubmit" onclick="submitPropietario()">✅ Guardar propietario</button>
       <button class="mcancel" onclick="closeModal('propietarioModal')">Cancelar</button>
     </div>
@@ -1150,8 +1208,20 @@ textarea.finput{resize:none;height:70px;line-height:1.5}
         <option value="ARS">Pesos (ARS)</option>
         <option value="USD">Dólares (USD)</option>
       </select>
+      <div id="vf-valorAnteriorWrap" class="empty-sub" style="text-align:left;margin-bottom:8px;display:none"></div>
+      <span class="flabel">Índice de referencia</span>
+      <select class="finput" id="vf-indice">
+        <option value="ICL">ICL (Índice para Contratos de Locación)</option>
+        <option value="IPC">IPC (Índice de Precios al Consumidor)</option>
+        <option value="Otro">Otro</option>
+      </select>
+      <span class="flabel">Porcentaje del índice (opcional)</span>
+      <div style="display:flex;gap:8px;align-items:flex-start">
+        <input class="finput" id="vf-porcentaje" type="text" inputmode="decimal" placeholder="Ej: 12,5" style="flex:1">
+        <button class="print-btn" style="margin-top:2px" onclick="calcularValorAlquiler()">🧮 Calcular</button>
+      </div>
       <span class="flabel" id="vf-montoLbl">Monto nuevo *</span>
-      <input class="finput" id="vf-monto" type="number" placeholder="Ej: 350000">
+      <input class="finput" id="vf-monto" type="text" inputmode="decimal" placeholder="Ej: 350000">
       <span class="flabel">Vigente desde *</span>
       <input class="finput" id="vf-fecha" type="date">
       <span class="flabel">Motivo</span>
@@ -1204,6 +1274,35 @@ textarea.finput{resize:none;height:70px;line-height:1.5}
     </div>
   </div>
 
+  <!-- DETALLE DE SOLICITUD DE CONTRATO -->
+  <div class="overlay" id="solicitudDetailModal">
+    <div class="modal" style="max-height:85vh;display:flex;flex-direction:column">
+      <div class="mhandle"></div>
+      <div class="mtitle" style="margin-bottom:8px">Solicitud de contrato</div>
+      <div style="overflow-y:auto;flex:1" id="solicitudDetailBody"></div>
+      <div class="item-actions" style="margin-top:10px">
+        <div class="act-btn" style="border-color:var(--rent);color:var(--rent)" onclick="cargarSolicitudComoInquilino()">✅ Cargar como inquilino</div>
+        <div class="act-btn danger" onclick="descartarSolicitud()">🗑️ Descartar</div>
+      </div>
+      <button class="mcancel" onclick="closeModal('solicitudDetailModal')" style="margin-top:8px">Cerrar</button>
+    </div>
+  </div>
+
+  <!-- GASTO EXTRA DE PROPIEDAD -->
+  <div class="overlay" id="gastoExtraModal">
+    <div class="modal">
+      <div class="mhandle"></div>
+      <div class="mtitle">Gasto extra de este mes</div>
+      <span class="flabel">Concepto *</span>
+      <input class="finput" id="gex-concepto" placeholder="Ej: Arreglo de caño, cerrajero...">
+      <span class="flabel">Monto *</span>
+      <input class="finput" id="gex-monto" type="text" inputmode="decimal" placeholder="Ej: 15000">
+      <div class="empty-sub" style="text-align:left;margin-bottom:8px">Se descuenta del neto a entregar al propietario en la liquidación de este mes.</div>
+      <button class="msubmit" onclick="submitGastoExtra()">✅ Guardar gasto extra</button>
+      <button class="mcancel" onclick="closeModal('gastoExtraModal')">Cancelar</button>
+    </div>
+  </div>
+
   <!-- NUEVO GASTO DE OFICINA -->
   <div class="overlay" id="gastoOficinaModal">
     <div class="modal">
@@ -1214,7 +1313,7 @@ textarea.finput{resize:none;height:70px;line-height:1.5}
       <span class="flabel">Concepto *</span>
       <input class="finput" id="gof-concepto" placeholder="Ej: Galletitas y azúcar">
       <span class="flabel">Monto *</span>
-      <input class="finput" id="gof-monto" type="number" placeholder="Ej: 5000">
+      <input class="finput" id="gof-monto" type="text" inputmode="decimal" placeholder="Ej: 5000">
       <button class="msubmit" onclick="submitGastoOficina()">✅ Guardar gasto</button>
       <button class="mcancel" onclick="closeModal('gastoOficinaModal')">Cancelar</button>
     </div>
@@ -1232,7 +1331,7 @@ textarea.finput{resize:none;height:70px;line-height:1.5}
       <span class="flabel">Concepto *</span>
       <input class="finput" id="gcl-concepto" placeholder="Ej: Tasa de justicia, carta documento...">
       <span class="flabel">Monto *</span>
-      <input class="finput" id="gcl-monto" type="number" placeholder="Ej: 15000">
+      <input class="finput" id="gcl-monto" type="text" inputmode="decimal" placeholder="Ej: 15000">
       <span class="flabel">Estado</span>
       <select class="finput" id="gcl-estado">
         <option value="pendiente">Pendiente de reintegro</option>
@@ -1240,6 +1339,40 @@ textarea.finput{resize:none;height:70px;line-height:1.5}
       </select>
       <button class="msubmit" onclick="submitGastoCliente()">✅ Guardar gasto</button>
       <button class="mcancel" onclick="closeModal('gastoClienteModal')">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- NUEVA CÉDULA -->
+  <div class="overlay" id="cedulaModal">
+    <div class="modal">
+      <div class="mhandle"></div>
+      <div class="mtitle" id="cedulaModalTitle">Nueva cédula</div>
+      <span class="flabel">Día que la llevamos *</span>
+      <input class="finput" id="ced-fecha" type="date">
+      <span class="flabel">Carátula / Expediente *</span>
+      <input class="finput" id="ced-caratula" placeholder="Ej: García c/ Municipalidad de Río Cuarto">
+      <span class="flabel">Destinatario *</span>
+      <input class="finput" id="ced-destinatario" placeholder="Ej: Municipalidad de Río Cuarto">
+      <span class="flabel">Observaciones</span>
+      <textarea class="finput" id="ced-observaciones" placeholder="Notas adicionales..."></textarea>
+      <button class="msubmit" onclick="submitCedula()">✅ Guardar cédula</button>
+      <button class="mcancel" onclick="closeModal('cedulaModal')">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- NUEVO TELÉFONO -->
+  <div class="overlay" id="telefonoModal">
+    <div class="modal">
+      <div class="mhandle"></div>
+      <div class="mtitle" id="telefonoModalTitle">Nuevo contacto</div>
+      <span class="flabel">Juzgado / Organismo *</span>
+      <input class="finput" id="tel-nombre" placeholder="Ej: Juzgado Civil Nº 3 · Río Cuarto">
+      <span class="flabel">Teléfono *</span>
+      <input class="finput" id="tel-telefono" type="tel" placeholder="Ej: 0358-4123456">
+      <span class="flabel">Notas</span>
+      <input class="finput" id="tel-notas" placeholder="Ej: Secretaría, horario de atención...">
+      <button class="msubmit" onclick="submitTelefono()">✅ Guardar contacto</button>
+      <button class="mcancel" onclick="closeModal('telefonoModal')">Cancelar</button>
     </div>
   </div>
 
@@ -1379,6 +1512,8 @@ var NAV_ADMIN = [
   {id:'honorarios',icon:'💰',lbl:'Honor.'},
   {id:'alquileres',icon:'🔑',lbl:'Alquileres'},
   {id:'gastos',icon:'💸',lbl:'Gastos'},
+  {id:'cedulas',icon:'📨',lbl:'Cédulas'},
+  {id:'telefonos',icon:'📞',lbl:'Teléfonos'},
   {id:'tareas',icon:'✅',lbl:'Tareas'},
   {id:'documentos',icon:'📂',lbl:'Docs'},
   {id:'chat',icon:'💬',lbl:'Chat'},
@@ -1394,6 +1529,8 @@ var NAV_EMP = [
   {id:'calendario',icon:'📅',lbl:'Agenda'},
   {id:'alquileres',icon:'🔑',lbl:'Alquileres'},
   {id:'gastos',icon:'💸',lbl:'Gastos'},
+  {id:'cedulas',icon:'📨',lbl:'Cédulas'},
+  {id:'telefonos',icon:'📞',lbl:'Teléfonos'},
   {id:'tareas',icon:'✅',lbl:'Tareas'},
   {id:'documentos',icon:'📂',lbl:'Docs'},
   {id:'chat',icon:'💬',lbl:'Chat'}
@@ -1496,6 +1633,9 @@ if (!DB.alqValoresAlquiler) DB.alqValoresAlquiler = [];
 if (!DB.alqInquilinos) DB.alqInquilinos = [];
 if (!DB.alqPagos) DB.alqPagos = [];
 if (!DB.alqLiquidaciones) DB.alqLiquidaciones = [];
+if (!DB.alqGastosExtra) DB.alqGastosExtra = [];
+if (!DB.cedulas) DB.cedulas = [];
+if (!DB.telefonos) DB.telefonos = [];
 if (!DB.gastosOficina) DB.gastosOficina = [];
 if (!DB.gastosClientes) DB.gastosClientes = [];
 
@@ -1566,6 +1706,9 @@ function initCloudSync() {
           DB.alqInquilinos = cloudData.alqInquilinos || [];
           DB.alqPagos = cloudData.alqPagos || [];
           DB.alqLiquidaciones = cloudData.alqLiquidaciones || [];
+          DB.alqGastosExtra = cloudData.alqGastosExtra || [];
+          DB.cedulas = cloudData.cedulas || [];
+          DB.telefonos = cloudData.telefonos || [];
           DB.gastosOficina = cloudData.gastosOficina || [];
           DB.gastosClientes = cloudData.gastosClientes || [];
           saveLocalDB();
@@ -1591,15 +1734,47 @@ function initCloudSync() {
 
 window.addEventListener('firebase-ready', function() {
   try { initCloudSync(); } catch (e) { console.log('Firebase no disponible:', e); }
+  try { initSolicitudesListener(); } catch (e) { console.log('Firebase no disponible:', e); }
 });
 // Si el script módulo ya cargó antes de que este se ejecute, intentamos igual
 if (window.__firebase) {
   try { initCloudSync(); } catch (e) { console.log('Firebase no disponible:', e); }
+  try { initSolicitudesListener(); } catch (e) { console.log('Firebase no disponible:', e); }
+}
+
+var solicitudesContrato = [];
+function initSolicitudesListener() {
+  try {
+    if (!window.__firebase) { setTimeout(initSolicitudesListener, 300); return; }
+    var fb = window.__firebase;
+    var colRef = fb.collection(fb.db, 'solicitudesContrato');
+    fb.onSnapshot(colRef, function(snap) {
+      solicitudesContrato = [];
+      snap.forEach(function(docSnap) {
+        var d = docSnap.data();
+        d.id = docSnap.id;
+        solicitudesContrato.push(d);
+      });
+      renderSolicitudesTab();
+    }, function(err) {
+      console.log('Error escuchando solicitudes:', err);
+    });
+  } catch (e) {
+    console.log('Error iniciando listener de solicitudes:', e);
+  }
 }
 
 function fmtMoney(n) {
   n = Number(n) || 0;
   return '$' + n.toLocaleString('es-AR');
+}
+function parseMonto(str) {
+  if (str === null || str === undefined) return 0;
+  str = String(str).trim();
+  if (!str) return 0;
+  str = str.replace(/\./g, '').replace(',', '.');
+  var n = parseFloat(str);
+  return isNaN(n) ? 0 : n;
 }
 
 function initialsOf(name) {
@@ -1609,19 +1784,40 @@ function initialsOf(name) {
 }
 
 // ── RENDER: CLIENTES ──
+var currentClientesPendienteFiltro = 'todos';
+function filterClientesPendiente(f, el) {
+  currentClientesPendienteFiltro = f;
+  var pills = el.parentElement.querySelectorAll('.fpill');
+  for (var j = 0; j < pills.length; j++) pills[j].classList.remove('on');
+  el.classList.add('on');
+  renderClients();
+}
+function resolverPendienteCliente(id) {
+  var c = DB.clientes.find(function(x) { return x.id === id; });
+  if (!c) return;
+  c.pendienteInicial = '';
+  saveDB();
+  renderClients();
+  showToast('✅ Pendiente resuelto');
+}
 function renderClients() {
   var list = document.getElementById('clientList');
   var empty = document.getElementById('clientEmpty');
   if (!list) return;
-  if (!DB.clientes.length) {
+  var clientesVisibles = DB.clientes;
+  if (currentClientesPendienteFiltro === 'pendiente') {
+    clientesVisibles = clientesVisibles.filter(function(c) { return c.pendienteInicial && c.pendienteInicial.trim(); });
+  }
+  if (!clientesVisibles.length) {
     list.innerHTML = '';
     empty.classList.add('show');
+    empty.querySelector('.empty-title').textContent = currentClientesPendienteFiltro === 'pendiente' ? 'No hay clientes con pendiente inicial' : 'Todavía no hay clientes';
     return;
   }
   empty.classList.remove('show');
   var html = '';
-  for (var i = 0; i < DB.clientes.length; i++) {
-    var c = DB.clientes[i];
+  for (var i = 0; i < clientesVisibles.length; i++) {
+    var c = clientesVisibles[i];
     var expCount = 0;
     for (var j = 0; j < DB.expedientes.length; j++) {
       if (DB.expedientes[j].clienteId === c.id) expCount++;
@@ -1631,6 +1827,12 @@ function renderClients() {
     html += '<div class="cinfo"><div class="cname">' + c.nombre + '</div>';
     html += '<div class="cexp">' + expCount + ' expediente(s) · ' + (c.fuero || 'Sin fuero') + '</div></div>';
     if (c.tel) html += '<button class="wa-btn" onclick="waCliente(\'' + c.nombre.replace(/'/g, "\\'") + '\',\'' + (c.fuero||'') + '\',\'—\',\'' + c.tel + '\')">📱 WA</button>';
+    if (c.pendienteInicial && c.pendienteInicial.trim()) {
+      html += '<div style="width:100%;background:rgba(230,126,34,.12);border:1px solid var(--warning);border-radius:8px;padding:8px 10px;margin-top:6px;display:flex;justify-content:space-between;align-items:center;gap:8px">';
+      html += '<span style="font-size:11px;color:var(--warning)">🟡 <b>Pendiente:</b> ' + c.pendienteInicial + '</span>';
+      html += '<span style="cursor:pointer;font-size:10px;white-space:nowrap" onclick="resolverPendienteCliente(\'' + c.id + '\')">✅ Listo</span>';
+      html += '</div>';
+    }
     if (currentUser === 'karina') {
       html += '<div class="item-actions" style="width:100%"><div class="act-btn" onclick="openClientModal(\'' + c.id + '\')">✏️ Editar</div><div class="act-btn danger" onclick="askDelete(\'clientes\',\'' + c.id + '\',\'' + c.nombre.replace(/'/g,"\\'") + '\')">🗑️ Borrar</div></div>';
     }
@@ -1649,11 +1851,13 @@ function openClientModal(editId) {
     document.getElementById('cf-fuero').value = c.fuero;
     document.getElementById('cf-tel').value = c.tel || '';
     document.getElementById('cf-notas').value = c.notas || '';
+    document.getElementById('cf-pendiente').value = c.pendienteInicial || '';
     document.getElementById('clientModalTitle').textContent = 'Editar cliente';
   } else {
     document.getElementById('cf-nombre').value = '';
     document.getElementById('cf-tel').value = '';
     document.getElementById('cf-notas').value = '';
+    document.getElementById('cf-pendiente').value = '';
     document.getElementById('clientModalTitle').textContent = 'Nuevo cliente';
   }
   document.getElementById('clientModal').classList.add('show');
@@ -1668,6 +1872,7 @@ function submitClient() {
     c.fuero = document.getElementById('cf-fuero').value;
     c.tel = document.getElementById('cf-tel').value.trim();
     c.notas = document.getElementById('cf-notas').value.trim();
+    c.pendienteInicial = document.getElementById('cf-pendiente').value.trim();
     showToast('✅ Cliente actualizado');
   } else {
     var nc = {
@@ -1676,6 +1881,7 @@ function submitClient() {
       fuero: document.getElementById('cf-fuero').value,
       tel: document.getElementById('cf-tel').value.trim(),
       notas: document.getElementById('cf-notas').value.trim(),
+      pendienteInicial: document.getElementById('cf-pendiente').value.trim(),
       fecha: new Date().toISOString()
     };
     DB.clientes.push(nc);
@@ -1688,6 +1894,27 @@ function submitClient() {
 }
 
 // ── RENDER: EXPEDIENTES ──
+function diasSinActuacion(e) {
+  if (!e.ultimaActuacion) return null;
+  var d = new Date(e.ultimaActuacion + 'T12:00:00'); d.setHours(0,0,0,0);
+  var hoy = new Date(); hoy.setHours(0,0,0,0);
+  return Math.round((hoy - d) / 86400000);
+}
+function expedienteDormido(e) {
+  if (e.estado === 'cerrado') return false;
+  var dias = diasSinActuacion(e);
+  if (dias === null) return false;
+  var plazoMeses = Number(e.plazoPerencion) || 5;
+  return dias >= plazoMeses * 30;
+}
+function actualizarActuacion(id) {
+  var e = DB.expedientes.find(function(x) { return x.id === id; });
+  if (!e) return;
+  e.ultimaActuacion = new Date().toISOString().slice(0, 10);
+  saveDB();
+  renderExpedientes();
+  showToast('✅ Actuación actualizada a hoy');
+}
 function renderExpedientes() {
   var list = document.getElementById('expList');
   var empty = document.getElementById('expEmpty');
@@ -1704,7 +1931,10 @@ function renderExpedientes() {
   for (var i = 0; i < DB.expedientes.length; i++) {
     var e = DB.expedientes[i];
     var fechaLbl = e.fecha ? new Date(e.fecha + 'T12:00:00').toLocaleDateString('es-AR') : 'Sin fecha';
-    html += '<div class="exp-card" data-estado="' + e.estado + '" data-fuero="' + e.fuero + '">';
+    var dormido = expedienteDormido(e);
+    var dias = diasSinActuacion(e);
+    var plazoMeses = Number(e.plazoPerencion) || 5;
+    html += '<div class="exp-card" data-estado="' + e.estado + '" data-fuero="' + e.fuero + '" data-dormido="' + dormido + '">';
     html += '<div class="exp-hdr"><div class="exp-car">' + e.caratula + '</div><div class="exp-st ' + stClass[e.estado] + '">' + stLabel[e.estado] + '</div></div>';
     html += '<div class="exp-meta">';
     html += '<div class="em"><strong>Número</strong>' + (e.numero || '—') + '</div>';
@@ -1712,9 +1942,16 @@ function renderExpedientes() {
     html += '<div class="em"><strong>Fecha</strong>' + fechaLbl + '</div>';
     html += '<div class="em"><strong>Fuero</strong>' + (e.fuero.charAt(0).toUpperCase() + e.fuero.slice(1)) + '</div>';
     html += '</div>';
-    if (currentUser === 'karina') {
-      html += '<div class="item-actions"><div class="act-btn" onclick="openExpModal(\'' + e.id + '\')">✏️ Editar</div><div class="act-btn danger" onclick="askDelete(\'expedientes\',\'' + e.id + '\',\'' + e.caratula.replace(/'/g,"\\'") + '\')">🗑️ Borrar</div></div>';
+    if (e.estado !== 'cerrado') {
+      html += '<div class="prop-meta" style="margin-top:6px"><div><strong>Última actuación:</strong> ' + (e.ultimaActuacion ? fmtDate(e.ultimaActuacion) + ' (' + dias + ' días)' : 'Sin cargar') + ' · Plazo: ' + plazoMeses + ' meses</div></div>';
+      if (dormido) html += '<div class="rent-alert">😴 Expediente durmiendo hace ' + dias + ' días — revisar antes de que perima, considerar instar</div>';
     }
+    html += '<div class="item-actions">';
+    html += '<div class="act-btn" onclick="actualizarActuacion(\'' + e.id + '\')">🔄 Actuación hoy</div>';
+    if (currentUser === 'karina') {
+      html += '<div class="act-btn" onclick="openExpModal(\'' + e.id + '\')">✏️ Editar</div><div class="act-btn danger" onclick="askDelete(\'expedientes\',\'' + e.id + '\',\'' + e.caratula.replace(/'/g,"\\'") + '\')">🗑️ Borrar</div>';
+    }
+    html += '</div>';
     html += '</div>';
   }
   list.innerHTML = html;
@@ -1732,12 +1969,16 @@ function openExpModal(editId) {
     document.getElementById('ef-fuero').value = e.fuero;
     document.getElementById('ef-estado').value = e.estado;
     document.getElementById('ef-fecha').value = e.fecha || '';
+    document.getElementById('ef-ultimaActuacion').value = e.ultimaActuacion || '';
+    document.getElementById('ef-plazoPerencion').value = e.plazoPerencion || '5';
     document.getElementById('expModalTitle').textContent = 'Editar expediente';
   } else {
     document.getElementById('ef-caratula').value = '';
     document.getElementById('ef-numero').value = '';
     document.getElementById('ef-juzgado').value = '';
     document.getElementById('ef-fecha').value = '';
+    document.getElementById('ef-ultimaActuacion').value = new Date().toISOString().slice(0, 10);
+    document.getElementById('ef-plazoPerencion').value = '5';
     document.getElementById('expModalTitle').textContent = 'Nuevo expediente';
   }
   document.getElementById('expModal').classList.add('show');
@@ -1754,6 +1995,8 @@ function submitExp() {
     e.fuero = document.getElementById('ef-fuero').value;
     e.estado = document.getElementById('ef-estado').value;
     e.fecha = document.getElementById('ef-fecha').value;
+    e.ultimaActuacion = document.getElementById('ef-ultimaActuacion').value;
+    e.plazoPerencion = document.getElementById('ef-plazoPerencion').value;
     showToast('✅ Expediente actualizado');
   } else {
     var ne = {
@@ -1763,7 +2006,9 @@ function submitExp() {
       juzgado: document.getElementById('ef-juzgado').value.trim(),
       fuero: document.getElementById('ef-fuero').value,
       estado: document.getElementById('ef-estado').value,
-      fecha: document.getElementById('ef-fecha').value
+      fecha: document.getElementById('ef-fecha').value,
+      ultimaActuacion: document.getElementById('ef-ultimaActuacion').value,
+      plazoPerencion: document.getElementById('ef-plazoPerencion').value
     };
     DB.expedientes.push(ne);
     showToast('✅ Expediente agregado');
@@ -1883,6 +2128,10 @@ function fmtMonedaMonto(monto, moneda) {
   if (moneda === 'USD') return 'USD ' + Number(monto).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   return fmtMoney(monto);
 }
+function getEncabezadoDoc(propietarioId) {
+  var owner = DB.alqPropietarios.find(function(x) { return x.id === propietarioId; });
+  return (owner && owner.encabezado) ? owner.encabezado : 'Karina Elena Estudio Jurídico';
+}
 var PORTAL_URLS = {
   municipales: 'https://app.riocuarto.gov.ar:8443/gestiontributaria/servlet/com.recursos.hceduimpmul?Inmo',
   rentas: 'https://www.rentascordoba.gob.ar/emision/ver-y-pagar/inmobiliario/detalle-de-cuota',
@@ -1945,6 +2194,7 @@ function alqTab(id, el) {
   if (id === 'pagos') renderPagos();
   if (id === 'liquidaciones') renderLiq();
   if (id === 'inquilinos') renderInquilinosTab();
+  if (id === 'solicitudes') renderSolicitudesTab();
 }
 
 // ── PROPIETARIOS ──
@@ -1994,6 +2244,7 @@ function openPropietarioModal(editId) {
     document.getElementById('pf-comisionTipo').value = p.comisionTipo || 'ninguna';
     document.getElementById('pf-comisionValor').value = p.comisionValor || '';
     document.getElementById('pf-notas').value = p.notas || '';
+    document.getElementById('pf-encabezado').value = p.encabezado || '';
     document.getElementById('propietarioModalTitle').textContent = 'Editar propietario';
   } else {
     document.getElementById('pf-nombre').value = '';
@@ -2001,6 +2252,7 @@ function openPropietarioModal(editId) {
     document.getElementById('pf-comisionTipo').value = 'ninguna';
     document.getElementById('pf-comisionValor').value = '';
     document.getElementById('pf-notas').value = '';
+    document.getElementById('pf-encabezado').value = '';
     document.getElementById('propietarioModalTitle').textContent = 'Nuevo propietario';
   }
   togglePfComision();
@@ -2010,7 +2262,8 @@ function submitPropietario() {
   var nombre = document.getElementById('pf-nombre').value.trim();
   if (!nombre) { showToast('⚠️ Escribí el nombre del propietario'); return; }
   var comisionTipo = document.getElementById('pf-comisionTipo').value;
-  var comisionValor = Number(document.getElementById('pf-comisionValor').value) || 0;
+  var comisionValor = parseMonto(document.getElementById('pf-comisionValor').value);
+  var encabezado = document.getElementById('pf-encabezado').value.trim();
   if (editingPropietarioId) {
     var p = DB.alqPropietarios.find(function(x) { return x.id === editingPropietarioId; });
     p.nombre = nombre;
@@ -2018,12 +2271,14 @@ function submitPropietario() {
     p.comisionTipo = comisionTipo;
     p.comisionValor = comisionValor;
     p.notas = document.getElementById('pf-notas').value.trim();
+    p.encabezado = encabezado;
     showToast('✅ Propietario actualizado');
   } else {
     DB.alqPropietarios.push({
       id: uid(), nombre: nombre, tel: document.getElementById('pf-tel').value.trim(),
       comisionTipo: comisionTipo, comisionValor: comisionValor,
-      notas: document.getElementById('pf-notas').value.trim()
+      notas: document.getElementById('pf-notas').value.trim(),
+      encabezado: encabezado
     });
     showToast('✅ Propietario agregado: ' + nombre);
   }
@@ -2122,6 +2377,112 @@ function renderInquilinosTab() {
     html += '</div></div>';
   }
   list.innerHTML = html;
+}
+
+// ── SOLICITUDES DE CONTRATO (desde el formulario de Google) ──
+function renderSolicitudesTab() {
+  var list = document.getElementById('solicitudList');
+  var empty = document.getElementById('solicitudEmpty');
+  var badge = document.getElementById('solicitudesBadge');
+  if (!list) return;
+  var pendientes = solicitudesContrato.filter(function(s) { return !s.procesada; });
+  if (badge) {
+    if (pendientes.length) {
+      badge.textContent = pendientes.length;
+      badge.style.cssText = 'background:var(--danger);color:#fff;border-radius:10px;padding:1px 6px;font-size:9px;margin-left:4px;display:inline-block';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+  var items = solicitudesContrato.slice().sort(function(a, b) { return new Date(b.fechaEnvio || 0) - new Date(a.fechaEnvio || 0); });
+  if (!items.length) { list.innerHTML = ''; empty.classList.add('show'); return; }
+  empty.classList.remove('show');
+  var html = '';
+  for (var i = 0; i < items.length; i++) {
+    var s = items[i];
+    var loc1 = s.locatario1 || {};
+    html += '<div class="tenant-box" style="cursor:pointer" onclick="openSolicitudDetail(\'' + s.id + '\')">';
+    html += '<div class="tname">' + (loc1.nombre || 'Sin nombre') + (s.procesada ? ' <span style="font-size:9px;color:var(--success)">(ya cargada)</span>' : ' <span style="font-size:9px;color:var(--warning)">(pendiente)</span>') + '</div>';
+    html += '<div class="tmeta">🏠 ' + (s.direccion || '—') + '<br>📧 ' + (s.correo || '—') + (s.fechaEnvio ? '<br>📅 ' + new Date(s.fechaEnvio).toLocaleDateString('es-AR') : '') + '</div>';
+    html += '</div>';
+  }
+  list.innerHTML = html;
+}
+
+var currentSolicitudId = null;
+var solicitudSiendoCargada = null;
+
+function openSolicitudDetail(id) {
+  currentSolicitudId = id;
+  var s = solicitudesContrato.find(function(x) { return x.id === id; });
+  if (!s) return;
+  function esVacio(v) { return !v || v.trim() === '' || v.trim().toLowerCase() === 'no'; }
+  function bloquePersona(p, titulo, camposExtra) {
+    if (!p || esVacio(p.nombre)) return '';
+    var h = '<div class="section-tag">' + titulo + '</div><div class="tenant-box"><div class="tname">' + p.nombre + '</div><div class="tmeta">';
+    h += camposExtra(p);
+    h += '</div></div>';
+    return h;
+  }
+  var html = '';
+  html += '<div class="prop-meta" style="margin-bottom:8px"><div><b>Enviado:</b> ' + (s.fechaEnvio ? new Date(s.fechaEnvio).toLocaleString('es-AR') : '—') + '</div></div>';
+  html += '<div class="section-tag">Datos generales</div>';
+  html += '<div class="tenant-box"><div class="tmeta">🏠 <b>Unidad:</b> ' + (s.direccion || '—') + '<br>📅 <b>Período:</b> ' + (s.periodo || '—') + '<br>🏷️ <b>Destino:</b> ' + (s.destino || '—') + '<br>📧 <b>Correo:</b> ' + (s.correo || '—') + '</div></div>';
+  html += bloquePersona(s.locatario1, 'Locatario 1', function(p) { return 'DNI: ' + (p.dni || '—') + '<br>Dirección real: ' + (p.direccionReal || '—') + '<br>Contacto: ' + (p.contacto || '—'); });
+  html += bloquePersona(s.locatario2, 'Locatario 2', function(p) { return 'DNI/CUIL: ' + (p.dni || '—') + '<br>Domicilio real: ' + (p.direccionReal || '—') + '<br>Contacto: ' + (p.contacto || '—'); });
+  html += bloquePersona(s.garante1, 'Garante 1', function(p) { return 'DNI/CUIL: ' + (p.dni || '—') + '<br>Domicilio: ' + (p.domicilio || '—') + '<br>Contacto: ' + (p.contacto || '—'); });
+  html += bloquePersona(s.garante2, 'Garante 2', function(p) { return 'DNI/CUIL: ' + (p.dni || '—') + '<br>Domicilio: ' + (p.domicilio || '—') + '<br>Contacto: ' + (p.contacto || '—'); });
+  document.getElementById('solicitudDetailBody').innerHTML = html;
+  document.getElementById('solicitudDetailModal').classList.add('show');
+}
+
+function cargarSolicitudComoInquilino() {
+  var s = solicitudesContrato.find(function(x) { return x.id === currentSolicitudId; });
+  if (!s) return;
+  if (!DB.alqPropiedades.length) { showToast('⚠️ Primero cargá una propiedad'); return; }
+  closeModal('solicitudDetailModal');
+  openInquilinoModalGeneral();
+  var loc1 = s.locatario1 || {};
+  var gar1 = s.garante1 || {};
+  function esVacio(v) { return !v || v.trim() === '' || v.trim().toLowerCase() === 'no'; }
+  document.getElementById('if-nombre').value = loc1.nombre || '';
+  document.getElementById('if-tel').value = loc1.contacto || '';
+  document.getElementById('if-gNombre').value = !esVacio(gar1.nombre) ? gar1.nombre : '';
+  document.getElementById('if-gDni').value = !esVacio(gar1.dni) ? gar1.dni : '';
+  document.getElementById('if-gTel').value = !esVacio(gar1.contacto) ? gar1.contacto : '';
+  document.getElementById('if-gDireccion').value = !esVacio(gar1.domicilio) ? gar1.domicilio : '';
+  if (s.direccion) {
+    var sel = document.getElementById('if-propiedadSelect');
+    var buscado = s.direccion.toLowerCase().slice(0, 10);
+    for (var i = 0; i < sel.options.length; i++) {
+      if (sel.options[i].text.toLowerCase().indexOf(buscado) > -1) { sel.selectedIndex = i; onIfPropiedadChange(); break; }
+    }
+  }
+  solicitudSiendoCargada = currentSolicitudId;
+  showToast('📋 Datos precargados — revisá y confirmá la propiedad correcta antes de guardar');
+}
+
+function marcarSolicitudProcesada(id) {
+  try {
+    var fb = window.__firebase;
+    if (!fb || !id) return;
+    var ref = fb.doc(fb.collection(fb.db, 'solicitudesContrato'), id);
+    fb.setDoc(ref, { procesada: true }, { merge: true });
+  } catch (e) { console.log('Error marcando solicitud procesada:', e); }
+}
+
+function descartarSolicitud() {
+  if (!currentSolicitudId) return;
+  if (!confirm('¿Descartar esta solicitud? No se va a poder recuperar.')) return;
+  try {
+    var fb = window.__firebase;
+    var ref = fb.doc(fb.collection(fb.db, 'solicitudesContrato'), currentSolicitudId);
+    fb.deleteDoc(ref);
+    closeModal('solicitudDetailModal');
+    showToast('🗑️ Solicitud descartada');
+  } catch (e) {
+    showToast('⚠️ No se pudo borrar la solicitud');
+  }
 }
 
 var editingPropiedadId = null;
@@ -2258,7 +2619,11 @@ function renderPropDetail(id) {
   if (valores.length) {
     for (var i = 0; i < valores.length; i++) {
       var v = valores[i];
-      html += '<div class="rentval-item"><span>' + fmtMonedaMonto(v.monto, v.moneda || 'ARS') + ' — desde ' + fmtDate(v.fechaDesde) + '</span><span style="color:var(--text3)">' + (v.motivo || '') + '</span></div>';
+      var detalleIndice = (v.indice && v.porcentaje !== null && v.porcentaje !== undefined) ? v.indice + ' +' + v.porcentaje + '%' + (v.valorAnterior ? ' sobre ' + fmtMoney(v.valorAnterior) : '') : (v.indice || '');
+      html += '<div class="rentval-item" style="flex-direction:column;align-items:flex-start;gap:2px">';
+      html += '<div style="display:flex;justify-content:space-between;width:100%"><span>' + fmtMonedaMonto(v.monto, v.moneda || 'ARS') + ' — desde ' + fmtDate(v.fechaDesde) + '</span><span style="color:var(--text3)">' + (v.motivo || '') + '</span></div>';
+      if (detalleIndice) html += '<div style="font-size:9px;color:var(--rent)">' + detalleIndice + '</div>';
+      html += '</div>';
     }
   } else {
     html += '<div class="empty-state-sm show">Todavía no cargaste ningún valor de alquiler</div>';
@@ -2312,18 +2677,46 @@ function toggleVfMonedaLbl() {
 function openValorAlquilerModal(propId) {
   valorAlquilerPropId = propId;
   document.getElementById('vf-monto').value = '';
+  document.getElementById('vf-porcentaje').value = '';
+  document.getElementById('vf-indice').value = 'ICL';
   document.getElementById('vf-fecha').value = new Date().toISOString().slice(0, 10);
   document.getElementById('vf-moneda').value = 'ARS';
   toggleVfMonedaLbl();
+  var valorAnterior = getValorAlquilerVigente(propId);
+  var wrap = document.getElementById('vf-valorAnteriorWrap');
+  if (valorAnterior) {
+    wrap.textContent = 'Valor vigente actual: ' + fmtMonedaMonto(valorAnterior.monto, valorAnterior.moneda || 'ARS') + ' (desde ' + fmtDate(valorAnterior.fechaDesde) + ')';
+    wrap.style.display = 'block';
+  } else {
+    wrap.style.display = 'none';
+  }
   document.getElementById('valorAlquilerModal').classList.add('show');
 }
+function calcularValorAlquiler() {
+  var valorAnterior = getValorAlquilerVigente(valorAlquilerPropId);
+  if (!valorAnterior) { showToast('⚠️ Todavía no hay un valor anterior para calcular sobre él'); return; }
+  var porcentaje = parseMonto(document.getElementById('vf-porcentaje').value);
+  if (!porcentaje && porcentaje !== 0) { showToast('⚠️ Ingresá el porcentaje del índice'); return; }
+  var nuevoMonto = valorAnterior.monto * (1 + porcentaje / 100);
+  document.getElementById('vf-monto').value = Math.round(nuevoMonto * 100) / 100;
+  showToast('🧮 Calculado: ' + fmtMoney(nuevoMonto) + ' (podés ajustarlo a mano si hace falta)');
+}
 function submitValorAlquiler() {
-  var monto = Number(document.getElementById('vf-monto').value);
+  var monto = parseMonto(document.getElementById('vf-monto').value);
   var fecha = document.getElementById('vf-fecha').value;
   var moneda = document.getElementById('vf-moneda').value;
+  var indice = document.getElementById('vf-indice').value;
+  var porcentajeStr = document.getElementById('vf-porcentaje').value;
+  var porcentaje = porcentajeStr ? parseMonto(porcentajeStr) : null;
   if (!monto) { showToast('⚠️ Ingresá el monto'); return; }
   if (!fecha) { showToast('⚠️ Ingresá la fecha'); return; }
-  DB.alqValoresAlquiler.push({ id: uid(), propiedadId: valorAlquilerPropId, monto: monto, moneda: moneda, fechaDesde: fecha, motivo: document.getElementById('vf-motivo').value });
+  var valorAnterior = getValorAlquilerVigente(valorAlquilerPropId);
+  DB.alqValoresAlquiler.push({
+    id: uid(), propiedadId: valorAlquilerPropId, monto: monto, moneda: moneda, fechaDesde: fecha,
+    motivo: document.getElementById('vf-motivo').value,
+    indice: indice, porcentaje: porcentaje,
+    valorAnterior: valorAnterior ? valorAnterior.monto : null
+  });
   saveDB();
   closeModal('valorAlquilerModal');
   renderPropDetail(valorAlquilerPropId);
@@ -2399,6 +2792,7 @@ function submitInquilino() {
   renderPropDetail(inquilinoPropId);
   renderPropiedades();
   if (document.getElementById('alqSub-inquilinos').style.display !== 'none') renderInquilinosTab();
+  if (solicitudSiendoCargada) { marcarSolicitudProcesada(solicitudSiendoCargada); solicitudSiendoCargada = null; }
   showToast('✅ Inquilino guardado');
 }
 
@@ -2446,16 +2840,26 @@ function renderPagos() {
       html += '<div class="cstate-opt' + (estado === 'pendiente' ? ' on-pendiente' : '') + '" data-e="pendiente" onclick="setCState(this)">Pendiente</div>';
       html += '</div></div>';
       html += '<div class="concept-inputs">';
-      html += '<input class="finput" type="number" placeholder="' + (monedaConcepto === 'USD' ? 'Monto del mes (USD)' : 'Monto del mes') + '" value="' + monto + '" data-f="monto">';
-      html += '<input class="finput" type="number" placeholder="' + (monedaConcepto === 'USD' ? 'Pagado (USD)' : 'Monto pagado') + '" value="' + montoPagado + '" data-f="montoPagado">';
+      html += '<input class="finput" type="text" inputmode="decimal" placeholder="' + (monedaConcepto === 'USD' ? 'Monto del mes (USD)' : 'Monto del mes') + '" value="' + (monto === '' ? '' : Number(monto).toLocaleString('es-AR')) + '" data-f="monto">';
+      html += '<input class="finput" type="text" inputmode="decimal" placeholder="' + (monedaConcepto === 'USD' ? 'Pagado (USD)' : 'Monto pagado') + '" value="' + (montoPagado === '' ? '' : Number(montoPagado).toLocaleString('es-AR')) + '" data-f="montoPagado">';
       html += '<input class="finput" type="date" value="' + fechaPago + '" data-f="fechaPago">';
-      if (monedaConcepto === 'USD') html += '<input class="finput" type="number" placeholder="Cotización del día" value="' + cotizacion + '" data-f="cotizacion">';
+      if (monedaConcepto === 'USD') html += '<input class="finput" type="text" inputmode="decimal" placeholder="Cotización del día" value="' + (cotizacion === '' ? '' : Number(cotizacion).toLocaleString('es-AR')) + '" data-f="cotizacion">';
       html += '</div></div>';
     }
 
+    var gastosExtraProp = DB.alqGastosExtra.filter(function(x) { return x.propiedadId === prop.id && x.mes === currentPagosMes; });
+    if (gastosExtraProp.length) {
+      html += '<div class="section-tag" style="margin-top:12px">Gastos extra de este mes</div>';
+      for (var ge = 0; ge < gastosExtraProp.length; ge++) {
+        var g = gastosExtraProp[ge];
+        html += '<div class="rentval-item"><span>' + g.concepto + '</span><span style="display:flex;gap:8px;align-items:center"><b style="color:var(--danger)">-' + fmtMoney(g.monto) + '</b><span style="cursor:pointer" onclick="askDelete(\'alqGastosExtra\',\'' + g.id + '\',\'' + g.concepto.replace(/'/g, "\\'") + '\')">🗑️</span></span></div>';
+      }
+    }
     html += '<div class="item-actions" style="margin-top:9px">';
     html += '<div class="act-btn" onclick="guardarPago(\'' + prop.id + '\')" style="border-color:var(--rent);color:var(--rent)">💾 Guardar pagos</div>';
     if (pago) html += '<div class="act-btn" onclick="verRecibo(\'' + prop.id + '\')" style="border-color:var(--rent);color:var(--rent)">🧾 Ver recibo</div>';
+    html += '<div class="act-btn" onclick="openGastoExtraModal(\'' + prop.id + '\')">➕ Gasto extra</div>';
+    if (pago) html += '<div class="act-btn danger" onclick="borrarPagoMes(\'' + prop.id + '\',\'' + prop.direccion.replace(/'/g, "\\'") + '\')">🗑️ Borrar pago del mes</div>';
     html += '</div></div>';
   }
   list.innerHTML = html;
@@ -2464,6 +2868,31 @@ function setCState(el) {
   var siblings = el.parentElement.querySelectorAll('.cstate-opt');
   for (var i = 0; i < siblings.length; i++) siblings[i].classList.remove('on-pagado', 'on-parcial', 'on-pendiente');
   el.classList.add('on-' + el.getAttribute('data-e'));
+}
+var gastoExtraPropId = null;
+function openGastoExtraModal(propId) {
+  gastoExtraPropId = propId;
+  document.getElementById('gex-concepto').value = '';
+  document.getElementById('gex-monto').value = '';
+  document.getElementById('gastoExtraModal').classList.add('show');
+}
+function submitGastoExtra() {
+  var concepto = document.getElementById('gex-concepto').value.trim();
+  var monto = parseMonto(document.getElementById('gex-monto').value);
+  if (!concepto) { showToast('⚠️ Escribí el concepto'); return; }
+  if (!monto) { showToast('⚠️ Ingresá el monto'); return; }
+  DB.alqGastosExtra.push({ id: uid(), propiedadId: gastoExtraPropId, mes: currentPagosMes, concepto: concepto, monto: monto });
+  saveDB();
+  closeModal('gastoExtraModal');
+  renderPagos();
+  showToast('✅ Gasto extra agregado');
+}
+function borrarPagoMes(propId, direccion) {
+  if (!confirm('¿Borrar el pago de "' + direccion + '" cargado para ' + mesLabel(currentPagosMes) + '? Ojo: el saldo arrastrado de esta propiedad no se recalcula solo, revisalo después a mano si hacía falta.')) return;
+  DB.alqPagos = DB.alqPagos.filter(function(x) { return !(x.propiedadId === propId && x.mes === currentPagosMes); });
+  saveDB();
+  renderPagos();
+  showToast('🗑️ Pago del mes borrado');
 }
 function guardarPago(propId) {
   var card = document.querySelector('.prop-card[data-prop="' + propId + '"]');
@@ -2477,11 +2906,11 @@ function guardarPago(propId) {
     var row = rows[i];
     var cKey = row.getAttribute('data-concepto');
     var moneda = row.getAttribute('data-moneda') || 'ARS';
-    var monto = Number(row.querySelector('[data-f="monto"]').value) || 0;
-    var montoPagado = Number(row.querySelector('[data-f="montoPagado"]').value) || 0;
+    var monto = parseMonto(row.querySelector('[data-f="monto"]').value);
+    var montoPagado = parseMonto(row.querySelector('[data-f="montoPagado"]').value);
     var fechaPago = row.querySelector('[data-f="fechaPago"]').value;
     var cotizacionEl = row.querySelector('[data-f="cotizacion"]');
-    var cotizacion = cotizacionEl ? (Number(cotizacionEl.value) || 0) : 0;
+    var cotizacion = cotizacionEl ? parseMonto(cotizacionEl.value) : 0;
     var estadoEl = row.querySelector('.cstate-opt.on-pagado, .cstate-opt.on-parcial, .cstate-opt.on-pendiente');
     var estado = estadoEl ? estadoEl.getAttribute('data-e') : 'pendiente';
 
@@ -2528,6 +2957,7 @@ function verRecibo(propId) {
     rowsHtml += '<tr><td>' + conceptLabels[k] + '</td><td>' + fmtMonedaMonto(c.monto, mon) + '</td><td>' + (c.interes ? fmtMonedaMonto(c.interes, mon) + ' (' + c.diasAtraso + ' días)' : '—') + '</td><td>' + (c.saldoPrevio ? fmtMonedaMonto(c.saldoPrevio, mon) : '—') + '</td><td>' + cobradoTxt + '</td><td>' + (c.saldoNuevo > 0 ? fmtMonedaMonto(c.saldoNuevo, mon) : '$0') + '</td></tr>';
   }
   var pendiente = totalDebePesos - totalPagadoPesos > 0 ? totalDebePesos - totalPagadoPesos : 0;
+  var encabezado = getEncabezadoDoc(prop.propietarioId);
   var html = '<html><head><meta charset="UTF-8"><title>Recibo</title><style>' +
     'body{font-family:Arial,sans-serif;padding:30px;color:#1A1510}' +
     'h1{font-size:18px;margin-bottom:2px}h2{font-size:13px;font-weight:normal;color:#555;margin-bottom:20px}' +
@@ -2535,12 +2965,12 @@ function verRecibo(propId) {
     '.tot{margin-top:14px;font-size:14px;font-weight:bold}' +
     '.firma{margin-top:60px;display:flex;justify-content:space-between}.firma div{width:45%;text-align:center;border-top:1px solid #333;padding-top:6px;font-size:12px}' +
     '</style></head><body>' +
-    '<h1>Karina Elena Estudio Jurídico — Recibo de pago</h1>' +
+    '<h1>' + encabezado + ' — Recibo de pago</h1>' +
     '<h2>' + mesLabel(currentPagosMes) + ' · ' + prop.direccion + '</h2>' +
     '<p><b>Inquilino:</b> ' + (inq ? inq.nombre : '—') + '</p>' +
     '<table><thead><tr><th>Concepto</th><th>Monto mes</th><th>Interés</th><th>Saldo anterior</th><th>Pagado</th><th>Saldo actual</th></tr></thead><tbody>' + rowsHtml + '</tbody></table>' +
     '<div class="tot">Total pagado (equivalente en pesos): ' + fmtMoney(totalPagadoPesos) + ' — Saldo pendiente: ' + fmtMoney(pendiente) + '</div>' +
-    '<div class="firma"><div>Firma inquilino</div><div>Firma Karina Elena Estudio Jurídico</div></div>' +
+    '<div class="firma"><div>Firma inquilino</div><div>Firma ' + encabezado + '</div></div>' +
     '</body></html>';
   var w = window.open('', '_blank');
   w.document.write(html);
@@ -2572,17 +3002,22 @@ function renderLiq() {
     var comision = 0;
     if (owner.comisionTipo === 'porcentaje') comision = totalCobrado * (owner.comisionValor / 100);
     else if (owner.comisionTipo === 'fijo') comision = owner.comisionValor * propsConPago;
-    var neto = totalCobrado - comision;
+    var misPropIds = misProps.map(function(p) { return p.id; });
+    var gastosExtraOwner = DB.alqGastosExtra.filter(function(x) { return misPropIds.indexOf(x.propiedadId) > -1 && x.mes === currentLiqMes; });
+    var totalGastosExtra = 0;
+    for (var ge = 0; ge < gastosExtraOwner.length; ge++) totalGastosExtra += Number(gastosExtraOwner[ge].monto);
+    var neto = totalCobrado - comision - totalGastosExtra;
     var liqGuardada = DB.alqLiquidaciones.find(function(x) { return x.clienteId === owner.id && x.mes === currentLiqMes && !x.propiedadId; });
 
     html += '<div class="liq-card">';
     html += '<div class="owner-name">' + owner.nombre + '</div>';
     html += '<div class="owner-sub">' + misProps.length + ' propiedad(es) · ' + propsConPago + ' con pago cargado este mes</div>';
     html += '<div class="liq-total">' + fmtMoney(neto) + '</div>';
-    html += '<div class="owner-sub">Cobrado: ' + fmtMoney(totalCobrado) + ' — Comisión: ' + fmtMoney(comision) + '</div>';
+    html += '<div class="owner-sub">Cobrado: ' + fmtMoney(totalCobrado) + ' — Comisión: ' + fmtMoney(comision) + (totalGastosExtra ? ' — Gastos extra: ' + fmtMoney(totalGastosExtra) : '') + '</div>';
     if (liqGuardada) html += '<span class="liq-badge' + (liqGuardada.firmada ? '' : ' pend') + '">' + (liqGuardada.firmada ? '✓ Firmada' : 'Pendiente de firma') + '</span>';
     html += '<div class="item-actions" style="margin-top:10px">';
     html += '<div class="act-btn" style="border-color:var(--rent);color:var(--rent)" onclick="generarLiquidacion(\'' + owner.id + '\')">🧾 Generar / imprimir</div>';
+    html += '<div class="act-btn" style="border-color:var(--rent);color:var(--rent)" onclick="generarExcelLiquidacion(\'' + owner.id + '\')">📊 Descargar Excel</div>';
     html += '<div class="act-btn" onclick="verHistorialLiq(\'' + owner.id + '\')">📜 Historial</div>';
     if (liqGuardada && !liqGuardada.firmada) html += '<div class="act-btn" onclick="marcarFirmada(\'' + owner.id + '\')">✅ Marcar firmada</div>';
     html += '</div></div>';
@@ -2610,7 +3045,17 @@ function generarLiquidacion(ownerId, mesParam) {
   var comision = 0;
   if (owner.comisionTipo === 'porcentaje') comision = totalCobrado * (owner.comisionValor / 100);
   else if (owner.comisionTipo === 'fijo') comision = owner.comisionValor * propsConPago;
-  var neto = totalCobrado - comision;
+  var misPropIds = misProps.map(function(p) { return p.id; });
+  var gastosExtraOwner = DB.alqGastosExtra.filter(function(x) { return misPropIds.indexOf(x.propiedadId) > -1 && x.mes === mes; });
+  var totalGastosExtra = 0, gastosExtraRows = '';
+  for (var ge = 0; ge < gastosExtraOwner.length; ge++) {
+    var gex = gastosExtraOwner[ge];
+    var propGex = DB.alqPropiedades.find(function(x) { return x.id === gex.propiedadId; });
+    totalGastosExtra += Number(gex.monto);
+    gastosExtraRows += '<tr><td>' + (propGex ? propGex.direccion : '—') + '</td><td colspan="2">' + gex.concepto + ' (gasto extra)</td><td>-' + fmtMoney(gex.monto) + '</td></tr>';
+  }
+  var neto = totalCobrado - comision - totalGastosExtra;
+  var encabezado = getEncabezadoDoc(ownerId);
 
   var existente = DB.alqLiquidaciones.find(function(x) { return x.clienteId === ownerId && x.mes === mes && !x.propiedadId; });
   if (!existente) { DB.alqLiquidaciones.push({ id: uid(), clienteId: ownerId, mes: mes, totalCobrado: totalCobrado, comision: comision, neto: neto, firmada: false, fecha: new Date().toISOString() }); }
@@ -2625,19 +3070,97 @@ function generarLiquidacion(ownerId, mesParam) {
     '.tot{margin-top:14px;font-size:14px}.tot b{font-size:17px}' +
     '.firma{margin-top:60px;display:flex;justify-content:space-between}.firma div{width:45%;text-align:center;border-top:1px solid #333;padding-top:6px;font-size:12px}' +
     '</style></head><body>' +
-    '<h1>Karina Elena Estudio Jurídico — Liquidación de alquileres</h1>' +
+    '<h1>' + encabezado + ' — Liquidación de alquileres</h1>' +
     '<h2>' + mesLabel(mes) + ' · Propietario: ' + owner.nombre + '</h2>' +
-    '<table><thead><tr><th>Propiedad</th><th>Inquilino</th><th>Concepto</th><th>Cobrado</th></tr></thead><tbody>' + rowsHtml + '</tbody></table>' +
+    '<table><thead><tr><th>Propiedad</th><th>Inquilino</th><th>Concepto</th><th>Cobrado</th></tr></thead><tbody>' + rowsHtml + gastosExtraRows + '</tbody></table>' +
     '<div class="tot">Total cobrado: ' + fmtMoney(totalCobrado) + '</div>' +
     '<div class="tot">Comisión administración: ' + fmtMoney(comision) + '</div>' +
+    (totalGastosExtra ? '<div class="tot">Gastos extra del mes: -' + fmtMoney(totalGastosExtra) + '</div>' : '') +
     '<div class="tot"><b>Neto a entregar: ' + fmtMoney(neto) + '</b></div>' +
-    '<div class="firma"><div>Firma ' + owner.nombre + '</div><div>Firma Karina Elena Estudio Jurídico</div></div>' +
+    '<div class="firma"><div>Firma ' + owner.nombre + '</div><div>Firma ' + encabezado + '</div></div>' +
     '</body></html>';
   var w = window.open('', '_blank');
   w.document.write(html);
   w.document.close();
   w.focus();
   setTimeout(function() { w.print(); }, 300);
+}
+function generarExcelLiquidacion(ownerId, mesParam) {
+  var mes = mesParam || currentLiqMes;
+  var owner = DB.alqPropietarios.find(function(x) { return x.id === ownerId; });
+  var misProps = DB.alqPropiedades.filter(function(x) { return x.propietarioId === ownerId; });
+  if (!misProps.length) { showToast('⚠️ Este propietario no tiene propiedades cargadas'); return; }
+  var conceptKeys = ['alquiler', 'expensas', 'emos', 'municipales', 'epec', 'rentas'];
+  var conceptLabels = { alquiler: 'Alquiler', expensas: 'Expensas', emos: 'EMOS', municipales: 'Municipales', epec: 'EPEC', rentas: 'Rentas' };
+  var headerRow = ['Propiedad', 'Inquilino'];
+  for (var hk = 0; hk < conceptKeys.length; hk++) {
+    headerRow.push(conceptLabels[conceptKeys[hk]] + ' - Monto');
+    headerRow.push(conceptLabels[conceptKeys[hk]] + ' - Pagado');
+    headerRow.push(conceptLabels[conceptKeys[hk]] + ' - Estado');
+  }
+  headerRow.push('Total cobrado (pesos)');
+  var rows = [['Liquidación ' + mesLabel(mes) + ' — ' + owner.nombre], [], headerRow];
+
+  var totalCobrado = 0, propsConPago = 0;
+  for (var j = 0; j < misProps.length; j++) {
+    var prop = misProps[j];
+    var pago = DB.alqPagos.find(function(x) { return x.propiedadId === prop.id && x.mes === mes; });
+    var inq = pago ? DB.alqInquilinos.find(function(x) { return x.id === pago.inquilinoId; }) : getInquilinoActual(prop.id);
+    var row = [prop.direccion, inq ? inq.nombre : '—'];
+    var totalProp = 0;
+    for (var ck = 0; ck < conceptKeys.length; ck++) {
+      var cKey = conceptKeys[ck];
+      var c = pago && pago.conceptos ? pago.conceptos[cKey] : null;
+      if (c) {
+        row.push(c.monto);
+        row.push(c.montoPagado);
+        row.push(c.estado);
+        var mp = c.montoPagadoPesos !== undefined ? c.montoPagadoPesos : c.montoPagado;
+        totalProp += mp;
+      } else {
+        row.push(''); row.push(''); row.push('');
+      }
+    }
+    row.push(totalProp);
+    totalCobrado += totalProp;
+    if (pago) propsConPago++;
+    rows.push(row);
+  }
+
+  var misPropIds = misProps.map(function(p) { return p.id; });
+  var gastosExtraOwner = DB.alqGastosExtra.filter(function(x) { return misPropIds.indexOf(x.propiedadId) > -1 && x.mes === mes; });
+  var totalGastosExtra = 0;
+  if (gastosExtraOwner.length) {
+    rows.push([]);
+    rows.push(['Gastos extra del mes']);
+    rows.push(['Propiedad', 'Concepto', 'Monto']);
+    for (var ge = 0; ge < gastosExtraOwner.length; ge++) {
+      var g = gastosExtraOwner[ge];
+      var pge = DB.alqPropiedades.find(function(x) { return x.id === g.propiedadId; });
+      rows.push([pge ? pge.direccion : '—', g.concepto, g.monto]);
+      totalGastosExtra += Number(g.monto);
+    }
+  }
+
+  var comision = 0;
+  if (owner.comisionTipo === 'porcentaje') comision = totalCobrado * (owner.comisionValor / 100);
+  else if (owner.comisionTipo === 'fijo') comision = owner.comisionValor * propsConPago;
+  var neto = totalCobrado - comision - totalGastosExtra;
+
+  rows.push([]);
+  rows.push(['Total cobrado', totalCobrado]);
+  rows.push(['Comisión administración', comision]);
+  if (totalGastosExtra) rows.push(['Gastos extra', totalGastosExtra]);
+  rows.push(['Neto a entregar', neto]);
+
+  if (typeof XLSX === 'undefined') { showToast('⚠️ No se pudo cargar el generador de Excel, revisá la conexión'); return; }
+  var ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [{ wch: 32 }, { wch: 20 }];
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, mesLabel(mes).replace(/\s+/g, '_').substring(0, 28));
+  var fname = 'Liquidacion_' + owner.nombre.replace(/\s+/g, '_') + '_' + mesLabel(mes).replace(/\s+/g, '_') + '.xlsx';
+  XLSX.writeFile(wb, fname);
+  showToast('📊 Excel descargado');
 }
 function generarLiquidacionPropiedad(propId, mesParam) {
   var mes = mesParam || currentLiqMes;
@@ -2660,7 +3183,14 @@ function generarLiquidacionPropiedad(propId, mesParam) {
     if (owner.comisionTipo === 'porcentaje') comision = totalCobrado * (owner.comisionValor / 100);
     else if (owner.comisionTipo === 'fijo') comision = owner.comisionValor;
   }
-  var neto = totalCobrado - comision;
+  var gastosExtraProp = DB.alqGastosExtra.filter(function(x) { return x.propiedadId === propId && x.mes === mes; });
+  var totalGastosExtra = 0, gastosExtraRows = '';
+  for (var ge = 0; ge < gastosExtraProp.length; ge++) {
+    totalGastosExtra += Number(gastosExtraProp[ge].monto);
+    gastosExtraRows += '<tr><td>' + gastosExtraProp[ge].concepto + ' (gasto extra)</td><td>-' + fmtMoney(gastosExtraProp[ge].monto) + '</td></tr>';
+  }
+  var neto = totalCobrado - comision - totalGastosExtra;
+  var encabezado = getEncabezadoDoc(prop.propietarioId);
 
   var existente = DB.alqLiquidaciones.find(function(x) { return x.propiedadId === propId && x.mes === mes; });
   if (!existente) { DB.alqLiquidaciones.push({ id: uid(), propiedadId: propId, clienteId: owner ? owner.id : null, mes: mes, totalCobrado: totalCobrado, comision: comision, neto: neto, firmada: false, fecha: new Date().toISOString() }); }
@@ -2674,14 +3204,15 @@ function generarLiquidacionPropiedad(propId, mesParam) {
     '.tot{margin-top:14px;font-size:14px}.tot b{font-size:17px}' +
     '.firma{margin-top:60px;display:flex;justify-content:space-between}.firma div{width:45%;text-align:center;border-top:1px solid #333;padding-top:6px;font-size:12px}' +
     '</style></head><body>' +
-    '<h1>Karina Elena Estudio Jurídico — Liquidación de alquiler</h1>' +
+    '<h1>' + encabezado + ' — Liquidación de alquiler</h1>' +
     '<h2>' + mesLabel(mes) + ' · ' + prop.direccion + ' · Propietario: ' + (owner ? owner.nombre : '—') + '</h2>' +
     '<p><b>Inquilino:</b> ' + (inq ? inq.nombre : '—') + '</p>' +
-    '<table><thead><tr><th>Concepto</th><th>Cobrado</th></tr></thead><tbody>' + rowsHtml + '</tbody></table>' +
+    '<table><thead><tr><th>Concepto</th><th>Cobrado</th></tr></thead><tbody>' + rowsHtml + gastosExtraRows + '</tbody></table>' +
     '<div class="tot">Total cobrado: ' + fmtMoney(totalCobrado) + '</div>' +
     '<div class="tot">Comisión administración: ' + fmtMoney(comision) + '</div>' +
+    (totalGastosExtra ? '<div class="tot">Gastos extra del mes: -' + fmtMoney(totalGastosExtra) + '</div>' : '') +
     '<div class="tot"><b>Neto a entregar: ' + fmtMoney(neto) + '</b></div>' +
-    '<div class="firma"><div>Firma ' + (owner ? owner.nombre : '') + '</div><div>Firma Karina Elena Estudio Jurídico</div></div>' +
+    '<div class="firma"><div>Firma ' + (owner ? owner.nombre : '') + '</div><div>Firma ' + encabezado + '</div></div>' +
     '</body></html>';
   var w = window.open('', '_blank');
   w.document.write(html);
@@ -2821,7 +3352,7 @@ function openGastoOficinaModal(editId) {
 function submitGastoOficina() {
   var fecha = document.getElementById('gof-fecha').value;
   var concepto = document.getElementById('gof-concepto').value.trim();
-  var monto = Number(document.getElementById('gof-monto').value);
+  var monto = parseMonto(document.getElementById('gof-monto').value);
   if (!fecha) { showToast('⚠️ Ingresá la fecha'); return; }
   if (!concepto) { showToast('⚠️ Escribí el concepto'); return; }
   if (!monto) { showToast('⚠️ Ingresá el monto'); return; }
@@ -2906,7 +3437,7 @@ function submitGastoCliente() {
   var fecha = document.getElementById('gcl-fecha').value;
   var clienteId = document.getElementById('gcl-cliente').value;
   var concepto = document.getElementById('gcl-concepto').value.trim();
-  var monto = Number(document.getElementById('gcl-monto').value);
+  var monto = parseMonto(document.getElementById('gcl-monto').value);
   var estado = document.getElementById('gcl-estado').value;
   if (!fecha) { showToast('⚠️ Ingresá la fecha'); return; }
   if (!concepto) { showToast('⚠️ Escribí el concepto'); return; }
@@ -2922,6 +3453,150 @@ function submitGastoCliente() {
   saveDB();
   closeModal('gastoClienteModal');
   renderGastosClientes();
+}
+
+// ══════════════════════════ CÉDULAS DE NOTIFICACIÓN ══════════════════════════
+var currentCedulaSearch = '';
+function searchCedulas(val) {
+  currentCedulaSearch = (val || '').toLowerCase();
+  renderCedulas();
+}
+function renderCedulas() {
+  var list = document.getElementById('cedulaList');
+  var empty = document.getElementById('cedulaEmpty');
+  if (!list) return;
+  var items = DB.cedulas.slice().sort(function(a, b) { return new Date(b.fecha) - new Date(a.fecha); });
+  if (currentCedulaSearch) {
+    items = items.filter(function(c) {
+      return c.caratula.toLowerCase().indexOf(currentCedulaSearch) > -1 || c.destinatario.toLowerCase().indexOf(currentCedulaSearch) > -1;
+    });
+  }
+  if (!items.length) {
+    list.innerHTML = '';
+    empty.classList.add('show');
+    empty.querySelector('.empty-title').textContent = currentCedulaSearch ? 'No se encontraron cédulas' : 'Todavía no hay cédulas cargadas';
+    return;
+  }
+  empty.classList.remove('show');
+  var html = '';
+  for (var i = 0; i < items.length; i++) {
+    var c = items[i];
+    html += '<div class="tenant-box">';
+    html += '<div class="tname">' + c.caratula + '</div>';
+    html += '<div class="tmeta">📅 ' + fmtDate(c.fecha) + ' · 📨 <b>Destinatario:</b> ' + c.destinatario + (c.observaciones ? '<br>📝 ' + c.observaciones : '') + '</div>';
+    html += '<div class="item-actions" style="margin-top:8px"><div class="act-btn" onclick="openCedulaModal(\'' + c.id + '\')">✏️ Editar</div><div class="act-btn danger" onclick="askDelete(\'cedulas\',\'' + c.id + '\',\'' + c.caratula.replace(/'/g,"\\'") + '\')">🗑️ Borrar</div></div>';
+    html += '</div>';
+  }
+  list.innerHTML = html;
+}
+
+var editingCedulaId = null;
+function openCedulaModal(editId) {
+  editingCedulaId = editId || null;
+  if (editId) {
+    var c = DB.cedulas.find(function(x) { return x.id === editId; });
+    document.getElementById('ced-fecha').value = c.fecha;
+    document.getElementById('ced-caratula').value = c.caratula;
+    document.getElementById('ced-destinatario').value = c.destinatario;
+    document.getElementById('ced-observaciones').value = c.observaciones || '';
+    document.getElementById('cedulaModalTitle').textContent = 'Editar cédula';
+  } else {
+    document.getElementById('ced-fecha').value = new Date().toISOString().slice(0, 10);
+    document.getElementById('ced-caratula').value = '';
+    document.getElementById('ced-destinatario').value = '';
+    document.getElementById('ced-observaciones').value = '';
+    document.getElementById('cedulaModalTitle').textContent = 'Nueva cédula';
+  }
+  document.getElementById('cedulaModal').classList.add('show');
+}
+function submitCedula() {
+  var fecha = document.getElementById('ced-fecha').value;
+  var caratula = document.getElementById('ced-caratula').value.trim();
+  var destinatario = document.getElementById('ced-destinatario').value.trim();
+  var observaciones = document.getElementById('ced-observaciones').value.trim();
+  if (!fecha) { showToast('⚠️ Ingresá la fecha'); return; }
+  if (!caratula) { showToast('⚠️ Escribí la carátula'); return; }
+  if (!destinatario) { showToast('⚠️ Escribí el destinatario'); return; }
+  if (editingCedulaId) {
+    var c = DB.cedulas.find(function(x) { return x.id === editingCedulaId; });
+    c.fecha = fecha; c.caratula = caratula; c.destinatario = destinatario; c.observaciones = observaciones;
+    showToast('✅ Cédula actualizada');
+  } else {
+    DB.cedulas.push({ id: uid(), fecha: fecha, caratula: caratula, destinatario: destinatario, observaciones: observaciones });
+    showToast('✅ Cédula agregada');
+  }
+  saveDB();
+  closeModal('cedulaModal');
+  renderCedulas();
+}
+
+// ══════════════════════════ TELÉFONOS DE JUZGADOS ══════════════════════════
+var currentTelefonoSearch = '';
+function searchTelefonos(val) {
+  currentTelefonoSearch = (val || '').toLowerCase();
+  renderTelefonos();
+}
+function renderTelefonos() {
+  var list = document.getElementById('telefonoList');
+  var empty = document.getElementById('telefonoEmpty');
+  if (!list) return;
+  var items = DB.telefonos.slice().sort(function(a, b) { return a.nombre.localeCompare(b.nombre); });
+  if (currentTelefonoSearch) {
+    items = items.filter(function(t) { return t.nombre.toLowerCase().indexOf(currentTelefonoSearch) > -1; });
+  }
+  if (!items.length) {
+    list.innerHTML = '';
+    empty.classList.add('show');
+    empty.querySelector('.empty-title').textContent = currentTelefonoSearch ? 'No se encontraron contactos' : 'Todavía no hay contactos cargados';
+    return;
+  }
+  empty.classList.remove('show');
+  var html = '';
+  for (var i = 0; i < items.length; i++) {
+    var t = items[i];
+    html += '<div class="tenant-box">';
+    html += '<div class="tname">' + t.nombre + '</div>';
+    html += '<div class="tmeta"><a href="tel:' + t.telefono.replace(/[^\d+]/g, '') + '" style="color:var(--rent);font-weight:600;text-decoration:none">📞 ' + t.telefono + '</a>' + (t.notas ? '<br>📝 ' + t.notas : '') + '</div>';
+    html += '<div class="item-actions" style="margin-top:8px"><div class="act-btn" onclick="openTelefonoModal(\'' + t.id + '\')">✏️ Editar</div><div class="act-btn danger" onclick="askDelete(\'telefonos\',\'' + t.id + '\',\'' + t.nombre.replace(/'/g,"\\'") + '\')">🗑️ Borrar</div></div>';
+    html += '</div>';
+  }
+  list.innerHTML = html;
+}
+
+var editingTelefonoId = null;
+function openTelefonoModal(editId) {
+  editingTelefonoId = editId || null;
+  if (editId) {
+    var t = DB.telefonos.find(function(x) { return x.id === editId; });
+    document.getElementById('tel-nombre').value = t.nombre;
+    document.getElementById('tel-telefono').value = t.telefono;
+    document.getElementById('tel-notas').value = t.notas || '';
+    document.getElementById('telefonoModalTitle').textContent = 'Editar contacto';
+  } else {
+    document.getElementById('tel-nombre').value = '';
+    document.getElementById('tel-telefono').value = '';
+    document.getElementById('tel-notas').value = '';
+    document.getElementById('telefonoModalTitle').textContent = 'Nuevo contacto';
+  }
+  document.getElementById('telefonoModal').classList.add('show');
+}
+function submitTelefono() {
+  var nombre = document.getElementById('tel-nombre').value.trim();
+  var telefono = document.getElementById('tel-telefono').value.trim();
+  var notas = document.getElementById('tel-notas').value.trim();
+  if (!nombre) { showToast('⚠️ Escribí el nombre del juzgado u organismo'); return; }
+  if (!telefono) { showToast('⚠️ Ingresá el teléfono'); return; }
+  if (editingTelefonoId) {
+    var t = DB.telefonos.find(function(x) { return x.id === editingTelefonoId; });
+    t.nombre = nombre; t.telefono = telefono; t.notas = notas;
+    showToast('✅ Contacto actualizado');
+  } else {
+    DB.telefonos.push({ id: uid(), nombre: nombre, telefono: telefono, notas: notas });
+    showToast('✅ Contacto agregado');
+  }
+  saveDB();
+  closeModal('telefonoModal');
+  renderTelefonos();
 }
 
 // ── RENDER: TAREAS ──
@@ -2986,9 +3661,17 @@ function filterTaskEstado(estado, btn) {
   }
   renderTareas();
 }
-
-// ── RENDER: NOVEDADES ──
-
+function limpiarTareasFinalizadas() {
+  var finalizadas = DB.tareas.filter(function(t) { return t.estado === 'final'; });
+  if (!finalizadas.length) { showToast('No hay tareas finalizadas para borrar'); return; }
+  if (!confirm('¿Borrar las ' + finalizadas.length + ' tarea(s) finalizada(s)? Esta acción no se puede deshacer.')) return;
+  DB.tareas = DB.tareas.filter(function(t) { return t.estado !== 'final'; });
+  saveDB();
+  renderTareas();
+  renderInformes();
+  renderEquipo();
+  showToast('🗑️ Tareas finalizadas borradas');
+}
 
 // ── CALENDARIO ──
 var calViewYear, calViewMonth; // 0-indexed month
@@ -3083,9 +3766,7 @@ function renderCalEvents() {
     html += '<div class="edate"><div class="eday">' + d.getDate() + '</div><div class="emon">' + MESES_CORTOS[d.getMonth()] + '</div></div>';
     html += '<div class="ev-info" style="flex:1"><div class="ev-title">' + e.titulo + '</div><div class="ev-meta">' + (e.detalle||'') + (e.hora?' · '+e.hora+' hs':'') + '</div></div>';
     html += '<div class="badge ' + fueroBadge[e.fuero] + '">' + fueroLabel[e.fuero] + '</div></div>';
-    if (currentUser === 'karina') {
-      html += '<div class="item-actions"><div class="act-btn" onclick="openEventModal(\'' + e.fecha + '\',\'' + e.id + '\')">✏️ Editar</div><div class="act-btn danger" onclick="askDelete(\'eventos\',\'' + e.id + '\',\'' + e.titulo.replace(/'/g,"\\'") + '\')">🗑️ Borrar</div></div>';
-    }
+    html += '<div class="item-actions"><div class="act-btn" onclick="openEventModal(\'' + e.fecha + '\',\'' + e.id + '\')">✏️ Editar</div><div class="act-btn" style="border-color:var(--success);color:var(--success)" onclick="waEvento(\'' + e.titulo.replace(/'/g,"\\'") + '\',\'' + (e.detalle||'').replace(/'/g,"\\'") + '\',\'' + d.toLocaleDateString('es-AR') + '\',\'' + (e.hora||'') + '\',\'' + e.fuero + '\')">📱 WhatsApp</div><div class="act-btn danger" onclick="askDelete(\'eventos\',\'' + e.id + '\',\'' + e.titulo.replace(/'/g,"\\'") + '\')">🗑️ Borrar</div></div>';
     html += '</div>';
   }
   list.innerHTML = html;
@@ -3230,8 +3911,20 @@ function renderDashboard() {
 function buildAutoAlerts() {
   var alerts = [];
   var today = new Date(); today.setHours(0,0,0,0);
+  for (var iEv = 0; iEv < DB.eventos.length; iEv++) {
+    var ev = DB.eventos[iEv];
+    if (!ev.fecha) continue;
+    var dEv = new Date(ev.fecha + 'T12:00:00'); dEv.setHours(0,0,0,0);
+    var diffEv = Math.round((dEv - today) / 86400000);
+    if (diffEv === 1) alerts.push({cls:'danger', title:'📅 Evento mañana — ' + ev.titulo, sub: (ev.detalle||'') + (ev.hora ? ' · ' + ev.hora + ' hs' : ''), time:'Mañana', tipo:'crit'});
+    else if (diffEv === 0) alerts.push({cls:'danger', title:'📅 Evento hoy — ' + ev.titulo, sub: (ev.detalle||'') + (ev.hora ? ' · ' + ev.hora + ' hs' : ''), time:'Hoy', tipo:'crit'});
+  }
   for (var i = 0; i < DB.expedientes.length; i++) {
     var e = DB.expedientes[i];
+    if (expedienteDormido(e)) {
+      var diasDorm = diasSinActuacion(e);
+      alerts.push({cls:'warn', title:'😴 Expediente durmiendo — ' + e.caratula, sub: diasDorm + ' días sin actuación · revisar antes de que perima', time:'Atención', tipo:'warn'});
+    }
     if (!e.fecha) continue;
     var d = new Date(e.fecha + 'T12:00:00'); d.setHours(0,0,0,0);
     var diff = Math.round((d - today) / 86400000);
@@ -3638,6 +4331,7 @@ function startClock() {
 
 // ── PIZARRA DEL DÍA ──
 var pizarraEditMode = false;
+var PIZARRA_EDITORES = ['karina', 'yani'];
 
 function renderPizarra() {
   var pizarra = DB.pizarra || {texto: '', fecha: ''};
@@ -3646,27 +4340,29 @@ function renderPizarra() {
   var editBtn = document.getElementById('pizarraEditBtn');
   if (!textEl) return;
 
-  // Solo Karina puede editar
-  if (currentUser !== 'karina') {
+  // Karina y Yani pueden editar
+  if (PIZARRA_EDITORES.indexOf(currentUser) === -1) {
     if (editBtn) editBtn.style.display = 'none';
+  } else {
+    if (editBtn) editBtn.style.display = 'block';
   }
 
   if (pizarra.texto && pizarra.texto.trim()) {
     textEl.innerHTML = pizarra.texto.replace(/\n/g, '<br>');
     textEl.classList.remove('empty');
   } else {
-    textEl.innerHTML = '<span class="empty">' + (currentUser === 'karina' ? 'Tocá "Editar" para dejar instrucciones para el equipo...' : 'Karina aún no dejó instrucciones para hoy...') + '</span>';
+    textEl.innerHTML = '<span class="empty">' + (PIZARRA_EDITORES.indexOf(currentUser) > -1 ? 'Tocá "Editar" para dejar instrucciones para el equipo...' : 'Todavía no dejaron instrucciones para hoy...') + '</span>';
     textEl.classList.add('empty');
   }
 
   if (dateEl && pizarra.fecha) {
     var d = new Date(pizarra.fecha);
-    dateEl.textContent = 'Actualizado: ' + d.toLocaleDateString('es-AR') + ' · ' + d.toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit'});
+    dateEl.textContent = 'Actualizado: ' + d.toLocaleDateString('es-AR') + ' · ' + d.toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit'}) + (pizarra.autor ? ' · ' + pizarra.autor : '');
   }
 }
 
 function togglePizarra() {
-  if (currentUser !== 'karina') return;
+  if (PIZARRA_EDITORES.indexOf(currentUser) === -1) return;
   pizarraEditMode = !pizarraEditMode;
   var textEl = document.getElementById('pizarraText');
   var inputEl = document.getElementById('pizarraInput');
@@ -3690,10 +4386,12 @@ function togglePizarra() {
 }
 
 function savePizarra() {
+  if (PIZARRA_EDITORES.indexOf(currentUser) === -1) return;
   var inputEl = document.getElementById('pizarraInput');
   if (!DB.pizarra) DB.pizarra = {};
   DB.pizarra.texto = inputEl.value.trim();
   DB.pizarra.fecha = new Date().toISOString();
+  DB.pizarra.autor = USERS[currentUser] ? USERS[currentUser].name : currentUser;
   saveDB();
   pizarraEditMode = false;
   var textEl = document.getElementById('pizarraText');
@@ -3747,6 +4445,8 @@ function renderAll() {
   renderPropiedades();
   renderGastosOficina();
   renderGastosClientes();
+  renderCedulas();
+  renderTelefonos();
   renderTareas();
   renderCalendar();
   renderDashboard();
@@ -3798,7 +4498,10 @@ function confirmDelete() {
     renderPropiedades();
   }
   else if (col === 'gastosOficina') renderGastosOficina();
+  else if (col === 'alqGastosExtra') renderPagos();
   else if (col === 'gastosClientes') renderGastosClientes();
+  else if (col === 'cedulas') renderCedulas();
+  else if (col === 'telefonos') renderTelefonos();
   renderDashboard();
   showToast('🗑️ Eliminado correctamente');
 }
@@ -3929,7 +4632,7 @@ function filterClients(q) {
 function filterExp(f, btn) {
   var cards = document.querySelectorAll('#expList .exp-card');
   for (var i = 0; i < cards.length; i++) {
-    var show = f === 'todos' || cards[i].dataset.estado === f || cards[i].dataset.fuero === f;
+    var show = f === 'todos' || cards[i].dataset.estado === f || cards[i].dataset.fuero === f || (f === 'dormido' && cards[i].dataset.dormido === 'true');
     cards[i].style.display = show ? 'block' : 'none';
   }
   var pills = document.querySelectorAll('#screen-expedientes .fpill');
@@ -4370,6 +5073,12 @@ function waHon(cliente, monto, concepto, venc, estado) {
   var emojis = {pendiente:'⏳ *PENDIENTE*', vencido:'🔴 *VENCIDO*', cobrado:'✅ *COBRADO*'};
   var d = new Date().toLocaleDateString('es-AR');
   var msg = '━━━━━━━━━━━━━━━━━━\n🏛️ *KARINA ELENA ESTUDIO JURÍDICO*\n' + (emojis[estado]||'') + '\n━━━━━━━━━━━━━━━━━━\n\n👤 *Cliente:* ' + cliente + '\n📋 *Concepto:* ' + concepto + '\n💰 *Monto:* ' + monto + '\n📅 *Vencimiento:* ' + venc + '\n📆 *Aviso:* ' + d + '\n━━━━━━━━━━━━━━━━━━\n📍 Estudio · Río Cuarto, Córdoba';
+  window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
+}
+
+function waEvento(titulo, detalle, fecha, hora, fuero) {
+  var fueroLbl = {civil:'Civil', laboral:'Laboral', familia:'Familia'};
+  var msg = '━━━━━━━━━━━━━━━━━━\n🏛️ *KARINA ELENA ESTUDIO JURÍDICO*\n📅 *RECORDATORIO DE AGENDA*\n━━━━━━━━━━━━━━━━━━\n\n📋 *' + titulo + '*\n' + (detalle ? '📝 ' + detalle + '\n' : '') + '📆 *Fecha:* ' + fecha + (hora ? ' · ' + hora + ' hs' : '') + '\n⚖️ *Fuero:* ' + (fueroLbl[fuero] || fuero) + '\n━━━━━━━━━━━━━━━━━━\n📍 Estudio · Río Cuarto, Córdoba';
   window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
 }
 
